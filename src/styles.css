@@ -115,23 +115,24 @@ table { width: 100%; border-collapse: collapse; min-width: 860px; }
 .resource-actions .col-action_type, .resource-actions .cell-action_type { width: 210px; }
 .resource-actions .col-parameter_needed, .resource-actions .cell-parameter_needed { width: 280px; }
 .resource-actions .actions-col, .resource-actions .row-actions { width: 166px; }
-.resource-intents { min-width: 940px; table-layout: fixed; }
+.resource-intents { min-width: 980px; table-layout: fixed; }
 .resource-intents .col-id, .resource-intents .cell-id { width: 72px; }
 .resource-intents .col-context, .resource-intents .cell-context { width: 360px; }
+.resource-intents .col-action_summary, .resource-intents .cell-action_summary { width: auto; }
 .resource-intents .actions-col, .resource-intents .row-actions { width: 166px; }
-.action-summary-cell { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; }
-.cell-context { white-space: normal; }
+.action-summary-cell { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px; min-width: 0; }
+.cell-context, .cell-action_summary { white-space: normal; }
 .resource-externalData { min-width: 960px; table-layout: fixed; }
 .resource-externalData .col-protocol_request, .resource-externalData .cell-protocol_request { width: 260px; }
 .resource-agents { min-width: 1040px; table-layout: fixed; }
 .resource-agents .col-agent_name, .resource-agents .cell-agent_name { width: 260px; }
 .resource-agents .col-protocol_request, .resource-agents .cell-protocol_request { width: 220px; }
 .cell-host { min-width: 0; }
-.resource-externalData .cell-host, .resource-agents .cell-host { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resource-externalData .cell-host, .resource-agents .cell-host { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .resource-externalData .col-id, .resource-externalData .cell-id, .resource-agents .col-id, .resource-agents .cell-id { width: 72px; }
 .resource-externalData .actions-col, .resource-externalData .row-actions, .resource-agents .actions-col, .resource-agents .row-actions { width: 166px; }
 th { padding: 13px 16px; background: #f8fafc; color: #64748b; font-size: 12px; text-align: left; text-transform: uppercase; white-space: nowrap; }
-td { max-width: 340px; padding: 13px 16px; border-top: 1px solid #edf2f7; color: #334155; vertical-align: middle; line-height: 1.35; }
+td { max-width: 420px; padding: 13px 16px; border-top: 1px solid #edf2f7; color: #334155; vertical-align: middle; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 td:first-child { color: #111827; font-weight: 700; }
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f8fbff; }
@@ -141,14 +142,14 @@ td:first-child { color: #111827; font-weight: 700; }
 .empty-state svg { display: block; margin: 0 auto 8px; }
 
 .badge { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 8px; border-radius: 999px; background: #eaf1ff; color: #1d4ed8; font-size: 12px; font-weight: 800; white-space: nowrap; }
-.target-cell { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; }
+.target-cell { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px; min-width: 0; }
 .target-type { display: inline-flex; align-items: center; width: fit-content; min-height: 22px; padding: 2px 8px; border-radius: 999px; background: #eef2f7; color: #475569; font-size: 12px; font-weight: 800; white-space: nowrap; }
 .target-content { display: grid; gap: 2px; min-width: 0; }
-.target-content strong, .target-content small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.target-content strong, .target-content small { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .target-content strong { color: #172033; font-weight: 700; }
 .target-content small { color: #64748b; font-size: 12px; }
 .muted-cell { color: #64748b; }
-.json-preview { display: inline-block; max-width: 100%; overflow: hidden; color: #475569; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.json-preview { display: inline-block; max-width: 100%; color: #475569; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; vertical-align: middle; }
 
 .unavailable-panel { display: grid; grid-template-columns: 28px 1fr; gap: 14px; margin: 18px; padding: 18px; border: 1px solid #f1d6a8; border-radius: 8px; background: #fffbeb; color: #713f12; }
 .unavailable-panel p { margin: 7px 0 0; }
