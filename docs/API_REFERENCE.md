@@ -102,7 +102,9 @@ Endpoint ini bukan bagian dari Swagger, tetapi dipakai oleh halaman AI Chat. Fro
 | `POST` | `/vector-webhook` | `:5678/webhook/update-intent` | Upload text knowledge atau PDF ke collection VectorDB |
 | `PUT` | `/vector-webhook` | `:5678/webhook/update-intent` | Sync Intent + Action dari backend ke collection VectorDB |
 
-Endpoint ini bukan bagian dari Swagger `:8080`; endpoint berasal dari workflow n8n `update_vectordb_ultimate`. UI-nya berada di halaman Vector Collections. Existing target bisa dipilih dari data real `/api/semantic-searches/`, tetapi target baru cukup diketik sebagai `collection_name`; n8n yang membuat atau memakai collection itu saat data dimasukkan.
+Endpoint ini bukan bagian dari Swagger `:8080`; endpoint berasal dari workflow n8n `update_vectordb_ultimate`. UI-nya berada di halaman Vector Collections. Target dipilih dari data real `/api/semantic-searches/`; target baru didaftarkan dulu lewat `POST /api/semantic-searches/` agar muncul juga di halaman Semantic Search.
+
+Sesuai ERD, `semantic_search.collection_name` tidak memiliki FK ke `n8n_vector_collections.name`. Integrasi dilakukan by name: nama yang sama didaftarkan di Semantic Search dan dikirim ke n8n untuk membuat/mengisi PGVector.
 
 ## Payload Utama
 
@@ -243,7 +245,7 @@ PUT sync Intent + Action:
 }
 ```
 
-`file` harus tetap menjadi nama field binary PDF karena workflow n8n membaca field tersebut. Jangan kirim mock collection. Gunakan existing Semantic Search `collection_name` jika ada; untuk collection baru, kirim user-entered `collection_name` ke n8n tanpa membuat record lewat Swagger dari halaman Vector Collections.
+`file` harus tetap menjadi nama field binary PDF karena workflow n8n membaca field tersebut. Jangan kirim mock collection. Collection baru harus didaftarkan ke Semantic Search terlebih dahulu, lalu `collection_name` yang sama dikirim ke n8n untuk membuat/mengisi PGVector.
 ### AI Chat
 
 Dipakai untuk `POST /chat-webhook`.

@@ -15,7 +15,7 @@ export function VectorCollectionsPage({ data, apiStatus, loading, loadData }) {
         onRefresh={loadData}
       />
       <StatusStrip warning={statusWarning}>{loading ? 'Memuat data collection...' : apiStatus}</StatusStrip>
-      <VectorCollectionPanel collections={data.semanticSearches || []} loading={loading} />
+      <VectorCollectionPanel collections={data.semanticSearches || []} loading={loading} loadData={loadData} />
     </div>
   );
 }

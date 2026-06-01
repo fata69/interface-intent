@@ -42,11 +42,13 @@ The web app currently implements these ERD modules:
 - Intents: list, detail-on-edit, create, update, delete.
 - External Data: list, detail-on-edit, create, update, delete.
 - Semantic Search: list, detail-on-edit, create, update, delete.
-- Vector Collections: choose an existing Semantic Search collection or type a new `collection_name` target, then `POST` text, `POST` PDF, or `PUT` sync to n8n via `/vector-webhook`. Do not create Semantic Search records from this page.
+- Vector Collections: register new collection names through `/api/semantic-searches/`, choose a Semantic Search collection, then `POST` text, `POST` PDF, or `PUT` sync to n8n via `/vector-webhook`.
 - Utilities: list and create only, matching Swagger.
 - Agent Utilities: create only, matching Swagger.
 - `n8n_vector_collections` and `n8n_vectors`: managed by the Vector Collections page through n8n PGVector until direct read endpoints exist.
 - AI Chat: sends real messages to the n8n webhook through `/chat-webhook`; it is not part of Swagger. The payload includes `collection_name` from the selected Semantic Search record so webhook collection naming stays aligned with `/api/semantic-searches/`.
+
+ERD note: `semantic_search.collection_name` and `n8n_vector_collections.name` are separate columns with no FK in the ERD. The UI keeps them aligned by using the same name: register the Semantic Search row first, then send that `collection_name` to n8n so PGVector uses the matching `n8n_vector_collections.name`.
 
 ## API Usage Status
 
@@ -84,7 +86,7 @@ Use React functional components and hooks. Keep module resource keys stable beca
 
 Keep pages feature-based. Add or change resource fields in the matching `src/features/<feature-name>/config.js` file and register it through `src/config/resources.js`. Each sidebar feature must have a `Page.jsx` that owns its layout and may call shared hooks/components from `src/templates/`. Avoid adding unrelated page state, modal logic, or table logic to `App.jsx`.
 
-Use descriptive field names matching API payloads, such as `agent_name`, `action_type`, `semantic_search_id`, and `collection_name`. JSON-like fields should be validated with `JSON.parse` before submit. For VectorDB uploads, use existing Semantic Search rows when available, allow explicit user-entered `collection_name` targets for new n8n collections, and keep multipart field name `file` for PDF uploads.
+Use descriptive field names matching API payloads, such as `agent_name`, `action_type`, `semantic_search_id`, and `collection_name`. JSON-like fields should be validated with `JSON.parse` before submit. For VectorDB uploads, register/select `collection_name` from Semantic Search first, then send that same value to n8n; keep multipart field name `file` for PDF uploads.
 
 ## Feature Development Pattern
 

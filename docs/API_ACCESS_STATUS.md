@@ -93,7 +93,9 @@ Payload VectorDB text:
 
 Payload VectorDB PDF memakai `multipart/form-data` dengan field `type=pdf`, `collection_name`, dan binary field `file`.
 
-Di halaman Vector Collections, `collection_name` bisa dipilih dari data real `/api/semantic-searches/` atau diketik sebagai target baru. Target baru tidak dibuat lewat Swagger; workflow n8n akan membuat atau memakai collection tersebut saat upload text/PDF atau sync dijalankan. Target yang diketik disimpan di `localStorage` browser sebagai recent target agar tidak hilang saat refresh, tetapi tetap bukan data API sampai ada endpoint read dari n8n/backend.
+Di halaman Vector Collections, `collection_name` dipilih dari data real `/api/semantic-searches/`. Target baru didaftarkan dulu melalui `POST /api/semantic-searches/`, lalu nama yang sama dikirim ke n8n saat upload text/PDF atau sync dijalankan.
+
+Catatan ERD: `semantic_search.collection_name` dan `n8n_vector_collections.name` bukan relasi FK. Keduanya disamakan secara logical by name. Row `semantic_search` membuat collection muncul di halaman Semantic Search dan bisa dipilih oleh Action; workflow n8n membuat/mengisi `n8n_vector_collections` dan `n8n_vectors` memakai nama yang sama.
 
 Catatan cleanup: smoke test write pernah dilakukan ke collection `peraturan` dengan text `Frontend smoke test VectorDB setelah n8n publish. Abaikan dokumen ini jika terlihat di hasil retrieval.` dan `Frontend proxy smoke test VectorDB setelah page dipisah.`. Belum dihapus karena tidak ada delete endpoint/credential database di repo. SQL cleanup disiapkan di `docs/VECTOR_TEST_CLEANUP.md`.
 
@@ -140,7 +142,7 @@ Endpoint berikut sudah dites dan mengembalikan `404`, atau tidak muncul di Swagg
 - Tombol Add/Edit/Delete hanya aktif jika method terkait tersedia di konfigurasi API frontend.
 - Tombol Edit untuk resource CRUD lengkap mengambil data detail dari `GET /api/.../{id}` sebelum membuka form.
 - Data collection existing diambil dari `semantic_search.collection_name` melalui endpoint `/api/semantic-searches/`.
-- Halaman Vector Collections tidak lagi melakukan `POST /api/semantic-searches/` untuk membuat target baru. User bisa mengetik `collection_name`; n8n akan membuat/mengisi collection tersebut melalui `POST` text, `POST` PDF, atau `PUT` sync. Recent target disimpan lokal di browser untuk UX, bukan sebagai mock server data.
+- Halaman Vector Collections melakukan `POST /api/semantic-searches/` untuk mendaftarkan collection baru agar muncul juga di halaman Semantic Search. Setelah terdaftar, `POST` text, `POST` PDF, atau `PUT` sync ke n8n memakai `collection_name` yang sama untuk mengisi PGVector.
 - Halaman AI Chat memakai respons real dari `/chat-webhook`; tidak ada fallback jawaban mock. Jika n8n mengembalikan `executionStarted`, UI menampilkan status workflow yang lebih readable, bukan JSON mentah.
 
 

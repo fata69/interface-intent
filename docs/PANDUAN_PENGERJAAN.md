@@ -90,7 +90,9 @@ AI Chat mengirim pesan ke webhook dengan payload:
 `collection_name` dipilih dari data real Semantic Search agar nama collection yang dipakai webhook sama dengan data API.
 ## Vector Collections
 
-Halaman Semantic Search hanya untuk CRUD data `semantic_search` lewat `/api/semantic-searches/`. Halaman Vector Collections dipakai untuk memilih atau mengetik target `collection_name`, lalu mengisi PGVector lewat n8n `/vector-webhook`.
+Halaman Semantic Search adalah registry collection lewat `/api/semantic-searches/`. Halaman Vector Collections bisa mendaftarkan `collection_name` baru ke Semantic Search, memilih collection tersebut, lalu mengisi PGVector lewat n8n `/vector-webhook`.
+
+Di ERD tidak ada FK antara `semantic_search` dan `n8n_vector_collections`. Hubungannya logical by name: `semantic_search.collection_name` harus sama dengan `n8n_vector_collections.name` yang dibuat/dipakai workflow n8n.
 
 Aksi VectorDB yang tersedia:
 
@@ -100,7 +102,7 @@ POST /vector-webhook  multipart/form-data: type=pdf, collection_name, file=<PDF>
 PUT  /vector-webhook  JSON: { collection_name }
 ```
 
-Existing `collection_name` diambil dari row Semantic Search real. Jika perlu collection baru, ketik nama target di halaman Vector Collections lalu jalankan upload text/PDF atau sync; jangan membuat record Semantic Search dari halaman ini. Workflow n8n yang membuat atau memakai collection tersebut saat data dimasukkan.
+Existing `collection_name` diambil dari row Semantic Search real. Jika perlu collection baru, register dari halaman Vector Collections terlebih dahulu agar muncul juga di halaman Semantic Search, lalu jalankan upload text/PDF atau sync. Workflow n8n yang membuat atau memakai collection PGVector saat data dimasukkan.
 
 Jangan test write endpoint `/vector-webhook` tanpa rencana cleanup. POST text/PDF akan menambah row ke `n8n_vectors`; hapus row test dengan exact text melalui endpoint cleanup atau SQL database sebelum handoff.
 

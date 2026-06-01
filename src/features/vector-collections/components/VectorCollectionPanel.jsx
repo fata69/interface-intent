@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Database, FileUp, RefreshCw, Send } from 'lucide-react';
+import { api } from '../../../api/client';
 
 async function readWebhookResponse(response) {
   const contentType = response.headers.get('content-type') || '';
@@ -24,43 +25,19 @@ const modeMeta = {
   sync: { title: 'Sync Intent Data', method: 'PUT', detail: 'insert Intent + Action data' },
 };
 
-const recentCollectionKey = 'intent-console.vectorCollections.recentTargets';
-
-function readRecentCollections() {
-  try {
-    const value = window.localStorage.getItem(recentCollectionKey);
-    const parsed = value ? JSON.parse(value) : [];
-    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeRecentCollections(collections) {
-  try {
-    window.localStorage.setItem(recentCollectionKey, JSON.stringify(collections));
-  } catch {
-    // Local storage is only a convenience for recent user-entered targets.
-  }
-}
-
-export function VectorCollectionPanel({ collections, loading }) {
+export function VectorCollectionPanel({ collections, loading, loadData }) {
   const [collectionName, setCollectionName] = useState('');
   const [newCollection, setNewCollection] = useState('');
-  const [manualCollections, setManualCollections] = useState(readRecentCollections);
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
   const [activeMode, setActiveMode] = useState('text');
-  const [status, setStatus] = useState('Pilih existing collection atau isi target baru sebelum mengirim request n8n.');
+  const [status, setStatus] = useState('Pilih Semantic Search collection sebelum mengirim request n8n.');
   const [statusType, setStatusType] = useState('neutral');
   const [loadingAction, setLoadingAction] = useState('');
 
   const collectionOptions = useMemo(
-    () => [...new Set([
-      ...collections.map((item) => item.collection_name).filter(Boolean),
-      ...manualCollections,
-    ])].sort(),
-    [collections, manualCollections],
+    () => [...new Set(collections.map((item) => item.collection_name).filter(Boolean))].sort(),
+    [collections],
   );
   const activeMeta = modeMeta[activeMode];
 
@@ -97,7 +74,7 @@ export function VectorCollectionPanel({ collections, loading }) {
     }
   }
 
-  function useCollectionTarget(event) {
+  async function registerCollection(event) {
     event.preventDefault();
     const name = normalizeCollectionName(newCollection);
     if (!name) {
@@ -109,19 +86,25 @@ export function VectorCollectionPanel({ collections, loading }) {
       setCollectionName(name);
       setNewCollection('');
       setStatusType('neutral');
-      setStatus(`Collection ${name} sudah ada dan dipilih.`);
+      setStatus(`Semantic Search collection ${name} sudah ada dan dipilih.`);
       return;
     }
 
-    setManualCollections((current) => {
-      const next = current.includes(name) ? current : [...current, name].sort();
-      writeRecentCollections(next);
-      return next;
-    });
-    setCollectionName(name);
-    setNewCollection('');
+    setLoadingAction('collection');
     setStatusType('neutral');
-    setStatus(`Target collection ${name} dipilih. n8n akan membuat atau mengisi collection saat upload text/PDF atau sync dijalankan.`);
+    setStatus(`Mendaftarkan ${name} ke tabel semantic_search...`);
+    try {
+      await api.create('semanticSearches', { collection_name: name });
+      await loadData();
+      setCollectionName(name);
+      setNewCollection('');
+      setStatusType('success');
+      setStatus(`${name} terdaftar di semantic_search. Upload text/PDF atau sync akan membuat/mengisi n8n_vector_collections dengan nama yang sama.`);
+    } catch (error) {
+      setError(error.message || 'Gagal mendaftarkan collection ke Semantic Search.');
+    } finally {
+      setLoadingAction('');
+    }
   }
 
   function syncIntent() {
@@ -177,28 +160,28 @@ export function VectorCollectionPanel({ collections, loading }) {
     <section className="vector-console">
       <div className="vector-console-bar">
         <label className="vector-field collection-picker">
-          <span>Collection</span>
+          <span>Semantic Search Collection</span>
           <select value={collectionName} onChange={(event) => setCollectionName(event.target.value)} disabled={busy}>
             <option value="">Select collection</option>
             {collectionOptions.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
-          <small>Existing API collection plus recent targets from this browser.</small>
+          <small>Data dari /api/semantic-searches/. Nilai ini dipakai sebagai target n8n by name.</small>
         </label>
 
-        <form className="vector-inline-create" onSubmit={useCollectionTarget}>
+        <form className="vector-inline-create" onSubmit={registerCollection}>
           <label className="vector-field">
-            <span>Use New Target</span>
+            <span>Register Semantic Search</span>
             <input
               value={newCollection}
               onChange={(event) => setNewCollection(event.target.value)}
               placeholder="peraturan_hr"
               disabled={busy}
             />
-            <small>Saved locally after use; created in PGVector when n8n receives upload or sync.</small>
+            <small>Membuat row semantic_search; PGVector dibuat/diisi n8n saat upload/sync.</small>
           </label>
           <button className="secondary-button" type="submit" disabled={busy}>
             <Database size={16} />
-            Use Target
+              {loadingAction === 'collection' ? 'Registering...' : 'Register'}
           </button>
         </form>
       </div>
@@ -220,7 +203,7 @@ export function VectorCollectionPanel({ collections, loading }) {
           <form className="vector-form" onSubmit={submitText}>
             <div className="vector-form-heading">
               <h2>{activeMeta.title}</h2>
-              <p>Kirim knowledge text ke <strong>{collectionName || 'collection terpilih'}</strong>.</p>
+              <p>Kirim knowledge text ke n8n vector collection <strong>{collectionName || 'terpilih'}</strong>.</p>
             </div>
             <textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="Tulis knowledge yang akan dimasukkan ke collection" rows={6} disabled={busy} />
             <button className="primary-button" type="submit" disabled={busy}>
@@ -234,7 +217,7 @@ export function VectorCollectionPanel({ collections, loading }) {
           <form className="vector-form compact" onSubmit={submitPdf}>
             <div className="vector-form-heading">
               <h2>{activeMeta.title}</h2>
-              <p>Upload PDF ke <strong>{collectionName || 'collection terpilih'}</strong>.</p>
+              <p>Upload PDF ke n8n vector collection <strong>{collectionName || 'terpilih'}</strong>.</p>
             </div>
             <input type="file" accept="application/pdf" onChange={(event) => setFile(event.target.files?.[0] || null)} disabled={busy} />
             <button className="primary-button" type="submit" disabled={busy}>

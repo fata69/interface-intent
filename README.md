@@ -155,7 +155,9 @@ Direct calls to `http://172.16.210.244:8080` may hit CORS issues in the browser,
 
 The AI Chat page uses `/chat-webhook`, proxied by Vite to the n8n webhook. The frontend sends `{ chatInput, message, sessionId, collection_name, semantic_search_id }` and renders the real webhook response. `collection_name` is selected from real Semantic Search records so webhook collection naming matches `/api/semantic-searches/`.
 
-The Vector Collections page uses `/vector-webhook`, proxied by Vite to the n8n PGVector workflow. It supports `POST` text knowledge, `POST` PDF upload, and `PUT` intent/action sync. The page can use an existing Semantic Search `collection_name` or a new user-entered target; n8n creates or fills that collection when upload/sync runs.
+The Vector Collections page registers collection names through `/api/semantic-searches/`, then uses `/vector-webhook`, proxied by Vite to the n8n PGVector workflow. It supports `POST` text knowledge, `POST` PDF upload, and `PUT` intent/action sync. The same `collection_name` is visible on Semantic Search and sent to n8n when upload/sync runs.
+
+ERD alignment: `semantic_search.collection_name` and `n8n_vector_collections.name` are different tables and have no direct foreign key. The app treats the name as the logical link: Semantic Search stores the registry row used by Actions, while n8n creates or fills the PGVector collection with the same name.
 
 ## Implemented Modules
 
@@ -166,7 +168,7 @@ The dashboard implements these ERD/API resources:
 - Intents: list, detail, create, update, delete.
 - External Data: list, detail, create, update, delete.
 - Semantic Search: list, detail, create, update, delete.
-- Vector Collections: select or type a `collection_name` target, upload text, upload PDF, and sync Intent/Action data to the n8n PGVector workflow.
+- Vector Collections: register/select a Semantic Search `collection_name`, upload text, upload PDF, and sync Intent/Action data to the n8n PGVector workflow.
 - Utilities: list and create.
 - Agent Utilities: create mapping only.
 - n8n vectors: handled through the Vector Collections page, not a separate empty CRUD page, because no read endpoint is exposed.
