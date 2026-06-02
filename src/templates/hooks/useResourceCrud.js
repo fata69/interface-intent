@@ -4,7 +4,10 @@ import { modules } from '../../config/resources';
 import { actionTargetFields } from '../../config/resourceOptions';
 import {
   emptyRecord,
+  getActionTarget,
+  labelFor,
   normalizeRecord,
+  parameterSummary,
   preparePayload,
   validateRecord,
   visibleFields,
@@ -21,6 +24,40 @@ function pageWindow(currentPage, totalPages) {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 }
 
+function sortValue(resource, row, column, data) {
+  if (column === 'target') return getActionTarget(row, data).label;
+  if (column === 'action_summary') {
+    const action = data.actions?.find((entry) => String(entry.id) === String(row.action_id));
+    if (!action) return row.action_id ?? '';
+    const target = getActionTarget(action, data);
+    return [action.action_type, target.label, parameterSummary(action.parameter_needed)].filter(Boolean).join(' ');
+  }
+  if (column.endsWith('_id')) {
+    const relationMap = {
+      action_id: 'actions',
+      semantic_search_id: 'semanticSearches',
+      external_data_id: 'externalData',
+      ai_agent_id: 'agents',
+      utility_id: 'utilities',
+    };
+    const relationResource = relationMap[column];
+    return relationResource ? labelFor(relationResource, row[column], data) : row[column];
+  }
+  return row[column];
+}
+
+function compareValues(a, b) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  const aNumber = Number(a);
+  const bNumber = Number(b);
+  if (Number.isFinite(aNumber) && Number.isFinite(bNumber) && String(a).trim() !== '' && String(b).trim() !== '') {
+    return aNumber - bNumber;
+  }
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+}
+
 export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
   const config = modules[resource];
   const [query, setQuery] = useState('');
@@ -32,6 +69,7 @@ export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
   const [confirmation, setConfirmation] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [sort, setSort] = useState({ column: config.columns.includes('id') ? 'id' : config.columns[0], direction: 'asc' });
 
   const capabilities = {
     canRead: api.can(resource, 'read'),
@@ -46,12 +84,20 @@ export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
     return rows.filter((row) => Object.values(row).join(' ').toLowerCase().includes(needle));
   }, [query, rows]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const sortedRows = useMemo(() => {
+    if (!sort.column) return filteredRows;
+    return [...filteredRows].sort((left, right) => {
+      const result = compareValues(sortValue(resource, left, sort.column, data), sortValue(resource, right, sort.column, data));
+      return sort.direction === 'asc' ? result : -result;
+    });
+  }, [data, filteredRows, resource, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const paginatedRows = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
-    return filteredRows.slice(startIndex, startIndex + pageSize);
-  }, [currentPage, filteredRows, pageSize]);
+    return sortedRows.slice(startIndex, startIndex + pageSize);
+  }, [currentPage, sortedRows, pageSize]);
 
   function updateQuery(value) {
     setQuery(value);
@@ -64,6 +110,14 @@ export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
 
   function updatePageSize(value) {
     setPageSize(Number(value));
+    setPage(1);
+  }
+
+  function updateSort(column) {
+    setSort((current) => ({
+      column,
+      direction: current.column === column && current.direction === 'asc' ? 'desc' : 'asc',
+    }));
     setPage(1);
   }
 
@@ -223,6 +277,7 @@ export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
       setPageSize: updatePageSize,
     },
     query,
+    sort,
     deleteRow,
     confirmDelete,
     formatJsonField,
@@ -234,6 +289,7 @@ export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
     setModal,
     setConfirmation,
     setQuery: updateQuery,
+    setSort: updateSort,
     updateFormField,
     visibleFormFields,
   };

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, ChevronDown, FileUp, Search, Send, X } from 'lucide-react';
 
 const selectedCollectionStorageKey = 'intent-agent-vector-collection';
+const maxTextCharacters = 50000;
 
 function loadSelectedCollection() {
   try {
@@ -107,6 +108,11 @@ export function VectorCollectionPanel({ collections, loading }) {
     if (status) resetStatus();
   }
 
+  function clearText() {
+    setText('');
+    resetStatus();
+  }
+
   function ensureCollection() {
     if (!collectionName) {
       setError('Collection wajib dipilih. Buat collection baru dari halaman Semantic Search.');
@@ -136,6 +142,11 @@ export function VectorCollectionPanel({ collections, loading }) {
     const cleanText = text.trim();
     if (!cleanText) {
       setError('Text wajib diisi.');
+      return;
+    }
+
+    if (cleanText.length > maxTextCharacters) {
+      setError('Text maksimal 50.000 karakter.');
       return;
     }
 
@@ -188,7 +199,7 @@ export function VectorCollectionPanel({ collections, loading }) {
 
     setFile(selectedFile);
     setStatusType('neutral');
-    setStatus(`${selectedFile.name} siap diupload.`);
+    setStatus(`PDF siap diupload: ${selectedFile.name}.`);
   }
 
   function clearPdfFile() {
@@ -207,10 +218,11 @@ export function VectorCollectionPanel({ collections, loading }) {
   const busy = loading || loadingAction !== '';
   const uploadDisabled = busy || !hasCollections;
   const hasText = text.trim().length > 0;
+  const textTooLong = text.length > maxTextCharacters;
   const idleStatus = !collectionName
     ? 'Pilih collection sebelum upload.'
     : activeMode === 'text'
-      ? (hasText ? 'Siap upload.' : 'Isi text untuk upload.')
+      ? (textTooLong ? 'Text melebihi batas karakter.' : hasText ? 'Siap upload.' : 'Isi text untuk upload.')
       : (file ? 'Siap upload.' : 'Pilih atau drop PDF untuk upload.');
   const statusMessage = status || idleStatus;
 
@@ -289,12 +301,18 @@ export function VectorCollectionPanel({ collections, loading }) {
                 <div className="vector-form-heading">
                   <h2>{activeMeta.title}</h2>
                 </div>
-                <div className="vector-limit-note">Maksimal 50.000 karakter.</div>
+                <div className={textTooLong ? 'vector-limit-note error' : 'vector-limit-note'}>Maksimal 50.000 karakter.</div>
                 <textarea value={text} onChange={(event) => updateText(event.target.value)} placeholder="Tulis knowledge yang akan dimasukkan ke collection" rows={6} disabled={uploadDisabled} />
-                <button className="primary-button" type="submit" disabled={uploadDisabled || !text.trim()}>
-                  <Send size={16} />
-                  {loadingAction === 'text' ? 'Sending...' : 'Upload Text'}
-                </button>
+                <div className="vector-form-footer">
+                  <span className={textTooLong ? 'character-counter error' : 'character-counter'}>{text.length.toLocaleString('id-ID')} / 50.000 karakter</span>
+                  <div className="vector-form-actions">
+                    <button className="secondary-button" type="button" onClick={clearText} disabled={uploadDisabled || !text}>Clear</button>
+                    <button className="primary-button" type="submit" disabled={uploadDisabled || !text.trim() || textTooLong}>
+                      <Send size={16} />
+                      {loadingAction === 'text' ? 'Sending...' : 'Upload Text'}
+                    </button>
+                  </div>
+                </div>
               </form>
             )}
 

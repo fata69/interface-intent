@@ -36,8 +36,10 @@ export function ResourceCrudSurface({ resource, data, loading, crud, toolbarSlot
                 data={data}
                 rows={crud.paginatedRows}
                 pagination={crud.pagination}
+                sort={crud.sort}
                 canUpdate={capabilities.canUpdate}
                 canRemove={capabilities.canRemove}
+                onSort={crud.setSort}
                 onView={crud.openDrawer}
                 onEdit={crud.openEdit}
                 onDelete={crud.deleteRow}

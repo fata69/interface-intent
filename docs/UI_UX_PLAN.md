@@ -13,6 +13,7 @@ The UI now uses a focused structure:
 - Global API status strip.
 - Searchable table.
 - Client-side table pagination for loaded Swagger resources with rows-per-page options `10`, `25`, and `50`.
+- Client-side sortable ID headers, defaulting to `id` ascending when the resource has an ID column.
 - Real API-backed add/edit/delete actions where Swagger exposes them.
 - Vector Collections page for text and PDF upload through n8n.
 - Detail drawer for row inspection.
@@ -44,6 +45,7 @@ Implemented on 2026-06-01:
 - AI Chat labels the visible `Session ID`, provides a copy control, and scrolls to the latest message automatically.
 - Vector Collections is a dedicated page with a single board layout: Semantic Search collection selector, text/PDF upload tabs, and shared request status. Collection names are created from the Semantic Search page. `POST` uploads text knowledge and `POST` uploads PDF via multipart field `file`; Intent/Action sync is hidden from the UI because the n8n workflow can create duplicate vector rows if used casually.
 - Vector Collections keeps the last selected collection in `sessionStorage` and uses a searchable, scroll-limited collection picker so long collection lists do not overflow the page.
+- Vector Collections shows upload limits, a text character counter with a 50,000-character guard, a Clear control for text uploads, and clearer PDF selected-file status.
 - ERD alignment is name-based, not FK-based: `semantic_search.collection_name` is the Action-facing registry, while `n8n_vector_collections.name` is the PGVector collection created/filled by n8n.
 - Sidebar parent items and nested submenus can be hidden or shown without leaving the page.
 - n8n async responses such as `executionStarted` are rendered as readable workflow status, not raw JSON bubbles.

@@ -1,7 +1,12 @@
-import { Boxes, ChevronLeft, ChevronRight, Eye, Pencil, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Boxes, ChevronLeft, ChevronRight, Eye, Pencil, Trash2 } from 'lucide-react';
 import { renderValue } from '../../utils/resourceUtils.jsx';
 
-export function ResourceTable({ resource, config, data, rows, pagination, canUpdate, canRemove, onView, onEdit, onDelete }) {
+function SortIcon({ active, direction }) {
+  if (!active) return <ArrowUpDown size={13} />;
+  return direction === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />;
+}
+
+export function ResourceTable({ resource, config, data, rows, pagination, sort, canUpdate, canRemove, onSort, onView, onEdit, onDelete }) {
   const loadedRows = Array.isArray(data[resource]) ? data[resource].length : 0;
   const emptyMessage = loadedRows ? 'Tidak ada data untuk filter ini.' : 'Belum ada data.';
 
@@ -11,7 +16,26 @@ export function ResourceTable({ resource, config, data, rows, pagination, canUpd
         <table className={`resource-table resource-${resource}`}>
           <thead>
             <tr>
-              {config.columns.map((column) => <th key={column} className={`col-${column}`}>{column.replaceAll('_', ' ')}</th>)}
+              {config.columns.map((column) => {
+                const sortable = column === 'id';
+                const active = sort?.column === column;
+                if (!sortable) return <th key={column} className={`col-${column}`}>{column.replaceAll('_', ' ')}</th>;
+
+                return (
+                  <th key={column} className={`col-${column}`}>
+                    <button
+                      className={active ? 'sort-header active' : 'sort-header'}
+                      type="button"
+                      onClick={() => onSort(column)}
+                      aria-sort={active ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+                      title={`Sort by ${column.replaceAll('_', ' ')}`}
+                    >
+                      <span>{column.replaceAll('_', ' ')}</span>
+                      <SortIcon active={active} direction={sort?.direction} />
+                    </button>
+                  </th>
+                );
+              })}
               <th className="actions-col">Actions</th>
             </tr>
           </thead>
