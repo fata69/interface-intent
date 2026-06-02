@@ -8,6 +8,11 @@ export default defineConfig({
       '/api': {
         target: 'http://172.16.210.244:8080',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Origin', 'http://172.16.210.244:8080');
+          });
+        },
       },
       '/chat-webhook': {
         target: 'http://172.16.210.244:5678',
