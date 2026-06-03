@@ -219,6 +219,7 @@ export function VectorCollectionPanel({ collections, loading }) {
   const uploadDisabled = busy || !hasCollections;
   const hasText = text.trim().length > 0;
   const textTooLong = text.length > maxTextCharacters;
+  const pdfFooterText = file ? `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)` : 'Belum ada file dipilih.';
   const idleStatus = !collectionName
     ? 'Pilih collection sebelum upload.'
     : activeMode === 'text'
@@ -349,7 +350,7 @@ export function VectorCollectionPanel({ collections, loading }) {
                   )}
                 </div>
                 <div className="vector-form-footer">
-                  <span className="character-counter">PDF maksimal 10 MB.</span>
+                  <span className="character-counter">{pdfFooterText}</span>
                   <div className="vector-form-actions">
                     <button className="primary-button pdf-upload-button" type="submit" disabled={uploadDisabled || !file}>
                       <FileUp size={16} />
