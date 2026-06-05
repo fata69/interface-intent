@@ -72,6 +72,7 @@ function proxy(req, res, target, rewritePath) {
     headers: {
       ...cleanHeaders(req.headers),
       host: targetUrl.host,
+      origin: targetUrl.origin,
       'x-forwarded-host': req.headers.host || '',
       'x-forwarded-proto': 'http',
     },
