@@ -1,225 +1,325 @@
-# API Reference - Intent & Agent Management Console
+﻿# API Reference - Intent & Agent Management Console
 
-Sumber: Swagger live `http://194.233.79.180:8080/swagger/doc.json`, Swagger HTML lokal terbaru, dan workflow n8n `update_vectordb_ultimate.json`.
+Sumber aktif: Swagger `http://194.233.79.180:8080/swagger/index.html#/` dan `http://194.233.79.180:8080/swagger/doc.json`.
 
-Base URL yang dipakai dari link Swagger:
+Base API:
 
 ```text
 http://194.233.79.180:8080
 ```
 
-Webhook chat n8n yang dipakai UI berada di host berbeda dan tidak termasuk Swagger `:8080`:
-
-```text
-http://103.140.90.131:5678/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat
-```
-
-Untuk development React, kosongkan `.env` agar request memakai Vite proxy `/api` dan tidak kena CORS:
+Frontend sebaiknya tetap memakai relative path melalui Vite/prod proxy:
 
 ```env
 VITE_API_BASE_URL=
 ```
 
-Catatan: endpoint di bawah diekstrak dari HTML Swagger lokal. API berada pada IP privat, jadi akses langsung hanya mungkin dari jaringan/VPN yang sama.
+## Auth
 
-Frontend juga memakai proxy `/chat-webhook` untuk meneruskan chat ke n8n dan `/vector-webhook` untuk update VectorDB lewat n8n.
+### Login
 
-## Ringkasan Endpoint
+```text
+POST /api/auth/login
+```
+
+Payload:
+
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+Response login berisi token dan user. Frontend menyimpan token di auth store dan mengirim header berikut untuk request API berikutnya:
+
+```text
+Authorization: Bearer <token>
+```
+
+### Profile
+
+```text
+GET /api/auth/me
+```
+
+Dipakai untuk memuat user aktif setelah token tersedia.
+
+### Register
+
+```text
+POST /api/auth/register
+```
+
+Endpoint tersedia di Swagger, tetapi tidak diekspos sebagai self-register publik di login page. Dashboard memakai Users page admin-only untuk create user agar role dan usecase assignment jelas.
+
+## Resource Endpoints
 
 ### Actions
 
 | Method | Path | Fungsi |
 | --- | --- | --- |
-| `GET` | `/api/actions/` | Mendapatkan semua action |
-| `POST` | `/api/actions/` | Membuat action baru |
-| `GET` | `/api/actions/{id}` | Mendapatkan satu action berdasarkan ID |
-| `PUT` | `/api/actions/{id}` | Memperbarui data action |
-| `DELETE` | `/api/actions/{id}` | Menghapus data action |
+| `GET` | `/api/actions/` | List action |
+| `POST` | `/api/actions/` | Create action |
+| `GET` | `/api/actions/{id}` | Detail action |
+| `PUT` | `/api/actions/{id}` | Update action |
+| `DELETE` | `/api/actions/{id}` | Delete action |
 
-Business rule dari Swagger: saat membuat action, hanya satu ID relasi yang boleh terisi, yaitu salah satu dari `semantic_search_id`, `external_data_id`, atau `ai_agent_id`.
-
-### AI Agent
-
-| Method | Path | Fungsi |
-| --- | --- | --- |
-| `GET` | `/api/ai-agents/` | Mendapatkan semua AI agent |
-| `POST` | `/api/ai-agents/` | Membuat AI agent baru |
-| `GET` | `/api/ai-agents/{id}` | Mendapatkan satu AI agent berdasarkan ID |
-| `PUT` | `/api/ai-agents/{id}` | Memperbarui AI agent |
-| `DELETE` | `/api/ai-agents/{id}` | Menghapus AI agent |
-
-### External Data
-
-| Method | Path | Fungsi |
-| --- | --- | --- |
-| `GET` | `/api/external-data/` | Mendapatkan semua external data |
-| `POST` | `/api/external-data/` | Membuat external data baru |
-| `GET` | `/api/external-data/{id}` | Mendapatkan satu external data |
-| `PUT` | `/api/external-data/{id}` | Memperbarui external data |
-| `DELETE` | `/api/external-data/{id}` | Menghapus external data |
-
-### Intent
-
-| Method | Path | Fungsi |
-| --- | --- | --- |
-| `GET` | `/api/intents/` | Mendapatkan semua intent |
-| `POST` | `/api/intents/` | Membuat intent baru |
-| `GET` | `/api/intents/{id}` | Mendapatkan satu intent |
-| `PUT` | `/api/intents/{id}` | Memperbarui intent |
-| `DELETE` | `/api/intents/{id}` | Menghapus intent |
-
-### Semantic Search
-
-| Method | Path | Fungsi |
-| --- | --- | --- |
-| `GET` | `/api/semantic-searches/` | Mendapatkan semua data semantic search |
-| `POST` | `/api/semantic-searches/` | Membuat data semantic search baru |
-| `GET` | `/api/semantic-searches/{id}` | Mendapatkan satu data semantic search |
-| `PUT` | `/api/semantic-searches/{id}` | Memperbarui data semantic search |
-| `DELETE` | `/api/semantic-searches/{id}` | Menghapus data semantic search |
-
-### Utility dan Mapping
-
-| Method | Path | Fungsi |
-| --- | --- | --- |
-| `GET` | `/api/utilities/` | Mendapatkan semua utility |
-| `POST` | `/api/utilities/` | Membuat utility baru |
-| `POST` | `/api/ai-agent-utilities/` | Menghubungkan AI agent ke utility |
-
-Swagger HTML tidak menampilkan endpoint detail/update/delete untuk utility dan mapping. Untuk web, siapkan UI list/create dulu dan aktifkan aksi lain hanya setelah endpoint dikonfirmasi.
-
-### AI Chat Webhook
-
-| Method | Frontend Path | Target | Fungsi |
-| --- | --- | --- | --- |
-| `POST` | `/chat-webhook` | `:5678/webhook/.../chat` | Mengirim pesan user ke workflow AI/n8n |
-
-Endpoint ini bukan bagian dari Swagger, tetapi dipakai oleh halaman AI Chat. Frontend hanya mengirim `chatInput`, `message`, dan `sessionId`; workflow n8n menentukan collection yang dipakai dari prompt/chat logic.
-### VectorDB n8n Webhook
-
-| Method | Frontend Path | Target | Fungsi |
-| --- | --- | --- | --- |
-| `POST` | `/vector-webhook` | `:5678/webhook/update-intent` | Upload text knowledge atau PDF ke collection VectorDB |
-| `PUT` | `/vector-webhook` | `:5678/webhook/update-intent` | Sync Intent + Action dari backend ke collection VectorDB; tidak diekspos di UI |
-
-Endpoint ini bukan bagian dari Swagger `:8080`; endpoint berasal dari workflow n8n `update_vectordb_ultimate`. UI-nya berada di halaman Vector Collections. Target upload dipilih dari data real `/api/semantic-searches/`; target baru dibuat dari halaman Semantic Search.
-
-Sesuai ERD, `semantic_search.collection_name` tidak memiliki FK ke `n8n_vector_collections.name`. Integrasi dilakukan by name: nama yang sama didaftarkan di Semantic Search dan dikirim ke n8n untuk membuat/mengisi PGVector.
-
-## Payload Utama
-
-### AI Agent
-
-Dipakai untuk `POST /api/ai-agents/` dan `PUT /api/ai-agents/{id}`.
-
-```json
-{
-  "agent_name": "string",
-  "default_param": "string",
-  "header": "string",
-  "host": "string",
-  "id": 0,
-  "protocol_request": "http_get"
-}
-```
-
-Field UI: `agent_name`, `protocol_request`, `host`, `header`, dan `default_param`.
-
-### Action
-
-Dipakai untuk `POST /api/actions/` dan `PUT /api/actions/{id}`.
+Payload create/update:
 
 ```json
 {
   "action_type": "semantic_search",
-  "ai_agent_id": 0,
+  "semantic_search_id": 0,
   "external_data_id": 0,
-  "parameter_needed": "string",
-  "semantic_search_id": 0
+  "ai_agent_id": 0,
+  "parameter_needed": "{}"
 }
 ```
 
-Swagger example juga menampilkan nested object `ai_agent`, `external_data`, `intent`, dan `semantic_search`, tetapi untuk form sebaiknya kirim ID relasi saja kecuali API menolak.
+`action_type` harus salah satu dari `semantic_search`, `external_data`, atau `ai_agent`. UI hanya menampilkan target relation yang sesuai dan membersihkan relation lain sebelum submit.
 
-Validasi UI penting:
+### AI Agents
 
-- `action_type` wajib diisi.
-- Hanya satu dari `semantic_search_id`, `external_data_id`, atau `ai_agent_id` yang boleh aktif.
-- `parameter_needed` diperlakukan sebagai JSON/string parameter.
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/ai-agents/` | List AI agent |
+| `POST` | `/api/ai-agents/` | Create AI agent |
+| `GET` | `/api/ai-agents/{id}` | Detail AI agent |
+| `PUT` | `/api/ai-agents/{id}` | Update AI agent |
+| `DELETE` | `/api/ai-agents/{id}` | Delete AI agent |
 
-### Intent
-
-Dipakai untuk `POST /api/intents/` dan `PUT /api/intents/{id}`.
+Payload create/update:
 
 ```json
 {
-  "action_id": 0,
-  "context": "string",
-  "id": 0
+  "agent_name": "string",
+  "protocol_request": "http_get",
+  "host": "string",
+  "header": "{}",
+  "default_param": "{}"
 }
 ```
 
-Field UI: `context` dan dropdown `action_id` dari `GET /api/actions/`.
+`protocol_request` options: `http_get`, `https_post`, `grpc`.
 
 ### External Data
 
-Dipakai untuk `POST /api/external-data/` dan `PUT /api/external-data/{id}`.
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/external-data/` | List external data |
+| `POST` | `/api/external-data/` | Create external data |
+| `GET` | `/api/external-data/{id}` | Detail external data |
+| `PUT` | `/api/external-data/{id}` | Update external data |
+| `DELETE` | `/api/external-data/{id}` | Delete external data |
+
+Payload create/update:
 
 ```json
 {
-  "default_param": "string",
-  "header": "string",
+  "protocol_request": "http_get",
   "host": "string",
-  "id": 0,
-  "protocol_request": "http_get"
+  "header": "{}",
+  "default_param": "{}"
 }
 ```
 
-Field UI sama seperti AI agent tanpa `agent_name`.
+### Intents
+
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/intents/` | List intent |
+| `POST` | `/api/intents/` | Create intent |
+| `GET` | `/api/intents/{id}` | Detail intent |
+| `PUT` | `/api/intents/{id}` | Update intent |
+| `DELETE` | `/api/intents/{id}` | Delete intent |
+
+Payload create/update:
+
+```json
+{
+  "usecase_id": 0,
+  "context": "string",
+  "action_id": 0
+}
+```
+
+`usecase_id` dan `action_id` memakai dropdown dari data real API.
+
+### Usecases
+
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/usecases` | List usecase di Swagger; frontend memakai known-good `/api/usecases/` |
+| `POST` | `/api/usecases` | Create usecase |
+| `GET` | `/api/usecases/{id}` | Detail usecase |
+| `PUT` | `/api/usecases/{id}` | Update usecase |
+| `DELETE` | `/api/usecases/{id}` | Delete usecase |
+
+Payload create/update:
+
+```json
+{
+  "name": "string",
+  "description": "string"
+}
+```
+
+### Roles
+
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/roles` | List role di Swagger; frontend memakai known-good `/api/roles/` |
+| `POST` | `/api/roles` | Create role |
+
+Payload create:
+
+```json
+{
+  "name": "string",
+  "description": "string"
+}
+```
+
+Roles page dan Users page hanya tersedia untuk admin di UI.
+
+### Users
+
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/users` | List user di Swagger; frontend memakai known-good `/api/users/` |
+| `POST` | `/api/users` | Create user |
+| `GET` | `/api/users/{id}` | Detail user |
+| `PUT` | `/api/users/{id}` | Update user |
+| `DELETE` | `/api/users/{id}` | Delete user |
+| `PUT` | `/api/users/{id}/role` | Assign role |
+
+Payload form UI:
+
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "role_id": 0,
+  "usecase_ids": [0]
+}
+```
+
+During edit, password can be omitted if it is not being changed. Role assignment also calls `/api/users/{id}/role` when needed.
 
 ### Semantic Search
 
-Dipakai untuk `POST /api/semantic-searches/` dan `PUT /api/semantic-searches/{id}`.
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/semantic-searches/` | List semantic search registry |
+| `POST` | `/api/semantic-searches/` | Create collection registry |
+| `GET` | `/api/semantic-searches/{id}` | Detail registry row |
+| `PUT` | `/api/semantic-searches/{id}` | Update registry row |
+| `DELETE` | `/api/semantic-searches/{id}` | Delete registry row |
+
+Payload:
 
 ```json
 {
-  "collection_name": "string",
-  "id": 0
+  "collection_name": "string"
 }
 ```
 
-### Utility
+Semantic Search remains the Action target registry because `action.semantic_search_id` exists in ERD/Swagger.
 
-Dipakai untuk `POST /api/utilities/`.
+### Utilities
+
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/utilities/` | List utility in Swagger; frontend uses known-good `/api/utilities` |
+| `POST` | `/api/utilities/` | Create utility |
+
+Payload:
 
 ```json
 {
-  "id": 0,
   "key": "string",
   "value": "string"
 }
 ```
 
-### AI Agent Utility Mapping
+Swagger does not expose detail/update/delete for Utilities, so those actions stay disabled.
 
-Dipakai untuk `POST /api/ai-agent-utilities/`.
+### Agent Utilities
+
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `POST` | `/api/ai-agent-utilities/` | Create AI agent to utility mapping |
+
+Payload:
 
 ```json
 {
   "ai_agent_id": 0,
-  "client_id": "string",
-  "id": 0,
-  "utility_id": 0
+  "utility_id": 0,
+  "client_id": "string"
 }
 ```
 
-Swagger example juga menampilkan nested `ai_agent` dan `utility`, tetapi form cukup memakai dropdown `ai_agent_id` dan `utility_id` plus input `client_id`.
+Swagger does not expose list/update/delete for this mapping, so the page is create-only.
 
-### VectorDB n8n Upload dan Sync
+## Vector Collections
 
-Dipakai oleh halaman Vector Collections.
+Native Swagger endpoint:
 
-POST text knowledge:
+| Method | Path | Fungsi |
+| --- | --- | --- |
+| `GET` | `/api/vector-collections` | List vector collections |
+| `POST` | `/api/vector-collections` | Create native vector collection row |
+| `GET` | `/api/vector-collections/{uuid}` | View/download original uploaded file |
+| `POST` | `/api/vector-collections/{uuid}/upload` | Upload original TXT/PDF file |
+
+Payload create native collection:
+
+```json
+{
+  "uuid": "string",
+  "name": "string",
+  "cmetadata": "{}"
+}
+```
+
+Current UI flow:
+
+1. User creates/selects `collection_name` from Semantic Search.
+2. Vector Collections page lists names from both Semantic Search and native `/api/vector-collections`.
+3. If selected name has no native vector collection row, UI creates one with `/api/vector-collections`.
+4. UI uploads the original TXT/PDF to `/api/vector-collections/{uuid}/upload`.
+5. UI then sends the same content to n8n `/vector-webhook` so existing chunking/vector indexing still runs.
+
+ERD note: `semantic_search.collection_name` and `n8n_vector_collections.name` are not connected by FK. UI keeps them aligned by name.
+
+## AI Chat Webhook
+
+```text
+POST /chat-webhook
+```
+
+Payload:
+
+```json
+{
+  "chatInput": "string",
+  "message": "string",
+  "sessionId": "string"
+}
+```
+
+AI Chat is separate from Swagger CRUD. It does not send `collection_name` or `semantic_search_id`; the n8n workflow decides routing from prompt/chat logic and backend relations.
+
+## VectorDB n8n Webhook
+
+```text
+POST /vector-webhook
+```
+
+Text upload payload:
 
 ```json
 {
@@ -229,7 +329,7 @@ POST text knowledge:
 }
 ```
 
-POST PDF upload memakai `multipart/form-data`:
+PDF upload uses multipart form-data:
 
 ```text
 type=pdf
@@ -237,70 +337,15 @@ collection_name=nama_collection
 file=<binary PDF>
 ```
 
-PUT sync Intent + Action (terdokumentasi untuk n8n, tidak diekspos di UI):
+`PUT /vector-webhook` remains documented for n8n sync, but is hidden in the frontend because casual use can create duplicate vector rows.
 
-```json
-{
-  "collection_name": "nama_collection"
-}
-```
+## JSON-like Fields
 
-`file` harus tetap menjadi nama field binary PDF karena workflow n8n membaca field tersebut. Jangan kirim mock collection. Collection baru harus didaftarkan ke Semantic Search terlebih dahulu, lalu `collection_name` yang sama dikirim ke n8n untuk membuat/mengisi PGVector.
-### AI Chat
+Swagger defines these JSON-like fields as strings:
 
-Dipakai untuk `POST /chat-webhook`.
+- `parameter_needed`
+- `header`
+- `default_param`
+- `cmetadata`
 
-```json
-{
-  "chatInput": "string",
-  "message": "string",
-  "sessionId": "string",
-  "collection_name": "string",
-  "semantic_search_id": 0
-}
-```
-
-`collection_name` berasal dari data real Semantic Search agar webhook memakai nama collection yang sama dengan `/api/semantic-searches/`.
-
-Respons webhook bisa berupa JSON atau text. UI membaca field umum seperti `output`, `text`, `response`, `message`, atau `answer`. Jika n8n mengembalikan response async seperti `executionStarted`, UI menampilkan status workflow readable, bukan bubble JSON mentah.
-
-## Model dan Enum
-
-Model yang tampil di Swagger:
-
-- `models.AIAgent`
-- `models.AIAgentUtility`
-- `models.Action`
-- `models.ActionType`
-- `models.ExternalData`
-- `models.Intent`
-- `models.ProtocolRequest`
-- `models.SemanticSearch`
-- `models.Utility`
-
-Enum yang terdeteksi:
-
-- `ActionType`: Swagger menyebut enum berisi 3 nilai. Nilai yang terlihat di example: `semantic_search`. Berdasarkan ERD/action relation, siapkan opsi UI `semantic_search`, `external_data`, dan `ai_agent`, lalu konfirmasi ke Swagger live.
-- `ProtocolRequest`: Swagger menyebut enum berisi 3 nilai. Nilai yang terlihat di example: `http_get`. Nilai lain perlu dikonfirmasi dari Swagger live.
-
-## Standar Implementasi Frontend
-
-- Semua request frontend memakai relative path `/api/...` saat `VITE_API_BASE_URL` kosong. Vite proxy meneruskan request ke `http://194.233.79.180:8080`.
-- Request chat memakai relative path `/chat-webhook`; Vite proxy meneruskan request ke webhook n8n `:5678`.
-- Request VectorDB memakai relative path `/vector-webhook`; Vite proxy meneruskan request ke `http://103.140.90.131:5678/webhook/update-intent`.
-- Gunakan trailing slash sesuai Swagger untuk collection endpoint, contoh `/api/intents/`.
-- Untuk detail/update/delete, ganti `{id}` dengan ID numerik.
-- Selalu tampilkan loading, error, empty state, dan konfirmasi delete.
-- Field foreign key wajib berupa dropdown dari endpoint terkait, bukan input angka manual.
-- Field `header`, `default_param`, dan `parameter_needed` ditampilkan sebagai textarea JSON, lalu dikirim sebagai string JSON jika API mengikuti example Swagger.
-
-## Catatan untuk Pengerjaan Berikutnya
-
-- Jangan mengubah nama endpoint tanpa mengecek Swagger live.
-- Jika API mengembalikan shape response berbeda dari example `{ "additionalProp1": {} }`, adaptasi mapping data di layer `src/api/` saja. Semua tampilan harus berasal dari API real.
-- Jika POST/PUT menolak field `id`, hapus `id` dari payload create/update di adapter API.
-- Jika POST/PUT action menolak nested object, kirim payload ringkas berbasis ID relasi seperti contoh di bagian Action.
-
-
-
-
+Frontend validates JSON text with `JSON.parse`, then sends the string value to match Swagger.

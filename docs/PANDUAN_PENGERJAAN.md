@@ -1,16 +1,23 @@
-# Panduan Pengerjaan Web
+﻿# Panduan Pengerjaan Web
 
-Dokumen ini menjelaskan cara mengembangkan **Intent & Agent Management Console** dengan struktur yang sudah disepakati. Project ini adalah frontend React/Vite yang menembak REST API eksternal dan webhook n8n; tidak ada backend lokal di codebase ini.
+Dokumen ini menjelaskan cara mengembangkan Intent & Agent Management Console. Project ini adalah frontend React/Vite yang memakai REST API eksternal dan webhook n8n; tidak ada backend lokal di codebase ini.
+
+## Sumber Utama
+
+- ERD terbaru ada di root repo: `ERD.mmd` dan `ERD_VIEW.html`.
+- Swagger aktif: `http://194.233.79.180:8080/swagger/index.html#/`.
+- Internal app server: `litmas@172.16.210.244`.
+- Default app URL server: `http://172.16.210.244:5173/`.
 
 ## Prinsip Struktur
 
-Gunakan pendekatan feature-based. Dalam project ini, **feature berarti page yang muncul di sidebar**.
+Gunakan pendekatan feature-based. Dalam project ini, feature berarti page yang muncul di sidebar.
 
 ```text
 src/features/<feature-name>/
-  Page.jsx      # layout page milik feature
-  config.js     # field, kolom, label, icon, description
-  components/   # optional, hanya untuk komponen khusus feature
+  Page.jsx
+  config.js
+  components/
 ```
 
 Shared code hanya ditempatkan di `src/templates/` jika dipakai lintas feature:
@@ -50,11 +57,10 @@ Jangan membuat template page besar yang mengatur semua feature. Feature `Page.js
 
 ## Sidebar Saat Ini
 
-Sidebar mengikuti arahan mentor:
-
 ```text
 AI-Configuration
 - Intents
+- Usecases
 - Actions
   - External Data
   - AI Agents
@@ -62,22 +68,36 @@ AI-Configuration
   - Semantic Search
 - Utilities
 - Vector Collections
+- Roles
+- Users
 - AI Chat
 ```
 
-Submenu dapat di-hide/unhide. Jangan menambah level submenu baru di bawah Semantic Search kecuali diminta.
+Roles dan Users bersifat admin-only di UI. Jangan menambah level submenu baru di bawah Semantic Search kecuali diminta.
 
 ## Integrasi API
 
-Request API memakai relative path `/api/...` dan diproxy oleh Vite ke `http://194.233.79.180:8080`. Chat memakai `/chat-webhook` dan diproxy ke n8n `:5678`. VectorDB memakai `/vector-webhook` dan diproxy ke `http://103.140.90.131:5678/webhook/update-intent`.
+Request API memakai relative path `/api/...` dan diproxy oleh Vite/prod server ke `http://194.233.79.180:8080`.
 
-Navigasi dashboard memakai `react-router-dom`. Route utama saat ini adalah `/intents`, `/actions`, `/external-data`, `/agents`, `/agent-utilities`, `/semantic-search`, `/utilities`, `/vector-collections`, dan `/chat`. Root `/` redirect ke `/intents`.
+```text
+/api/*          -> http://194.233.79.180:8080/api/*
+/chat-webhook   -> http://103.140.90.131:5678/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat
+/vector-webhook -> http://103.140.90.131:5678/webhook/update-intent
+```
+
+Navigasi dashboard memakai `react-router-dom`. Route utama saat ini adalah `/intents`, `/usecases`, `/actions`, `/external-data`, `/agents`, `/agent-utilities`, `/semantic-search`, `/utilities`, `/vector-collections`, `/roles`, `/users`, dan `/chat`. Root `/` redirect ke `/intents`.
 
 Jangan menambahkan mock data. Jika endpoint belum ada, biarkan capability di `src/api/client.js` bernilai `false` dan tampilkan unavailable state.
 
+## Auth dan Admin Pages
+
+API memakai Bearer token. Login dilakukan lewat `/api/auth/login`, profile lewat `/api/auth/me`, dan `401` akan memicu session reset.
+
+Jangan expose self-register publik. Untuk dashboard, user dibuat dari admin-only Users page supaya `role_id` dan `usecase_ids` jelas.
+
 ## AI Chat
 
-AI Chat mengirim pesan ke webhook dengan payload:
+AI Chat mengirim pesan ke n8n dengan payload:
 
 ```json
 {
@@ -89,14 +109,22 @@ AI Chat mengirim pesan ke webhook dengan payload:
 
 Collection untuk retrieval ditentukan oleh workflow n8n dari prompt/chat logic, bukan dari selector frontend.
 
-AI Chat menyimpan `sessionId` dan daftar pesan di `sessionStorage` dengan key `intent-agent-ai-chat-session`. Tombol reset chat membuat session baru dan menghapus state tersimpan.
+AI Chat menyimpan `sessionId`, pesan, dan draft di `sessionStorage` melalui store feature. Tombol reset chat membuat session baru dan menghapus state tersimpan.
+
 ## Vector Collections
 
-Halaman Semantic Search adalah registry collection lewat `/api/semantic-searches/`. Halaman Vector Collections memilih collection tersebut, lalu mengisi PGVector lewat n8n `/vector-webhook`.
+Semantic Search adalah registry collection untuk Action target melalui `/api/semantic-searches/`. Vector Collections memakai nama collection dari Semantic Search dan native `/api/vector-collections`.
 
-Di ERD tidak ada FK antara `semantic_search` dan `n8n_vector_collections`. Hubungannya logical by name: `semantic_search.collection_name` harus sama dengan `n8n_vector_collections.name` yang dibuat/dipakai workflow n8n.
+Current flow:
 
-Aksi VectorDB yang tersedia:
+1. Buat atau pilih collection dari Semantic Search.
+2. Vector Collections memastikan native collection row ada di `/api/vector-collections`.
+3. Upload original TXT/PDF ke `/api/vector-collections/{uuid}/upload`.
+4. Kirim konten yang sama ke n8n `/vector-webhook` untuk chunking/vector indexing.
+
+Di ERD tidak ada FK antara `semantic_search` dan `n8n_vector_collections`. Hubungannya logical by name: `semantic_search.collection_name` harus sama dengan `n8n_vector_collections.name`.
+
+Aksi n8n VectorDB yang tersedia:
 
 ```text
 POST /vector-webhook  JSON: { type: "text", text, collection_name }
@@ -104,9 +132,9 @@ POST /vector-webhook  multipart/form-data: type=pdf, collection_name, file=<PDF>
 PUT  /vector-webhook  JSON: { collection_name }
 ```
 
-Existing `collection_name` diambil dari row Semantic Search real. Jika perlu collection baru, buat dari halaman Semantic Search terlebih dahulu, lalu jalankan upload text/PDF dari Vector Collections. Endpoint PUT sync tetap terdokumentasi untuk n8n, tetapi tidak diekspos di UI karena berisiko menambah row duplicate jika dipakai tanpa deduplication.
+Endpoint `PUT /vector-webhook` tetap terdokumentasi untuk n8n, tetapi tidak diekspos di UI karena berisiko menambah row duplicate jika dipakai tanpa deduplication.
 
-Jangan test write endpoint `/vector-webhook` tanpa rencana cleanup. POST text/PDF akan menambah row ke `n8n_vectors`; hapus row test dengan exact text melalui endpoint cleanup atau SQL database sebelum handoff.
+Jangan test write endpoint `/vector-webhook` tanpa rencana cleanup. POST text/PDF akan menambah row ke `n8n_vectors`; cleanup SQL terdokumentasi di `docs/VECTOR_TEST_CLEANUP.md`.
 
 ## Validasi Sebelum Handoff
 

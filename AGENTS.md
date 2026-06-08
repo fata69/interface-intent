@@ -1,8 +1,8 @@
-# Repository Guidelines
+﻿# Repository Guidelines
 
 ## Project Structure & Module Organization
 
-This repository contains a React/Vite dashboard for configuring an AI chatbot system based on the provided ERD and local Swagger API.
+This repository contains a React/Vite dashboard for configuring an AI chatbot system based on the root ERD and the active Swagger API.
 
 - `src/App.jsx` is only the application shell/router. Do not move page logic back into this file.
 - `src/config/resources.js` registers feature configs and defines sidebar grouping.
@@ -25,11 +25,11 @@ There is intentionally no mock data. Empty states mean the API returned no data,
 
 ## Current Migration Memory
 
-Latest ERD and Swagger audit date: 2026-06-04.
+Latest ERD and Swagger audit date: 2026-06-08. The current ERD source is `ERD.mmd` in the repository root, with `ERD_VIEW.html` as the browser-viewable renderer.
 
-New Swagger/API target for the migration branch is `http://194.233.79.180:8080`. Legacy API target was `http://172.16.210.244:8080`.
+Active Swagger/API target is `http://194.233.79.180:8080`. The internal app server runs as `litmas@172.16.210.244`, usually serving the app at `http://172.16.210.244:5173/`.
 
-The new API is reachable, but GET requests to the main data endpoints return `401 Unauthorized` without a Bearer token. Auth foundation is implemented on the migration branch before switching `/api` proxy defaults.
+The active API is reachable, and GET requests to the main data endpoints return `401 Unauthorized` without a Bearer token. Auth foundation and `/api` proxy defaults are already implemented for `http://194.233.79.180:8080`.
 
 New Swagger adds auth, roles, usecases, and user-management endpoints: `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me`, `GET /api/roles`, `POST /api/roles`, `GET/POST /api/usecases`, `GET/PUT/DELETE /api/usecases/{id}`, `GET/POST /api/users`, `GET/PUT/DELETE /api/users/{id}`, and `PUT /api/users/{id}/role`.
 
@@ -105,9 +105,9 @@ ERD note: `semantic_search.collection_name` and `n8n_vector_collections.name` ar
 
 ## API Usage Status
 
-Legacy Swagger/current code default was checked at `http://172.16.210.244:8080/swagger/doc.json`.
+Active Swagger/current code default was checked at `http://194.233.79.180:8080/swagger/doc.json`. Do not use the internal app server host as the API target; `172.16.210.244` is for serving the frontend app.
 
-New migration Swagger was checked on 2026-06-04 at `http://194.233.79.180:8080/swagger/doc.json`. The new API is authenticated; unauthenticated GET requests to data endpoints return `401 Unauthorized`. Implement login/Bearer token handling before switching the frontend/proxy default to the new API.
+Active Swagger was checked on 2026-06-08 at `http://194.233.79.180:8080/swagger/doc.json`. The API is authenticated; unauthenticated GET requests to data endpoints return `401 Unauthorized`, and the frontend already handles login/Bearer token requests.
 
 Fully utilized Swagger endpoints:
 
@@ -188,7 +188,7 @@ This is an operational dashboard, not a landing page. Keep the UI focused: sideb
 
 Use `lucide-react` icons. Do not use emoji icons. Foreign key fields must use dropdowns populated from real API data, not free-text numeric inputs. The Action form is conditional by `action_type`; keep non-selected target relation fields cleared before submit. Action labels should stay detailed enough for Intent selection, including id, type, target, and parameter summary.
 
-Sidebar navigation should stay grouped as a collapsible sub-sidebar. `AI-Configuration` contains Intents, Actions, External Data, AI Agents, Agent Utilities, Semantic Search, Utilities, Vector Collections, and AI Chat. Do not add a separate empty Vectors CRUD page until real read endpoints exist. Do not add another nested level under Semantic Search unless explicitly requested.
+Sidebar navigation should stay grouped as a collapsible sub-sidebar. `AI-Configuration` contains Intents, Usecases, Actions, External Data, AI Agents, Agent Utilities, Semantic Search, Utilities, Vector Collections, Roles, Users, and AI Chat. Do not add a separate empty Vectors CRUD page until real read endpoints exist. Do not add another nested level under Semantic Search unless explicitly requested.
 
 ## Testing Guidelines
 
@@ -205,6 +205,9 @@ For API-related changes, verify Swagger live again and update `docs/API_ACCESS_S
 Keep `.env` out of git. During local development, leave `VITE_API_BASE_URL` empty so the app uses the Vite proxy. If deploying without Vite proxy, set `VITE_API_BASE_URL` to the real API base URL and handle CORS on the server.
 
 For internal production, prefer `npm run build` plus `npm start` or the Nginx config in `server-setup/`. Keep `VITE_API_BASE_URL=` empty in production when using the provided proxy server so browser requests stay relative to the app host.
+
+
+
 
 
 

@@ -1,163 +1,104 @@
-# API Access Status
+﻿# API Access Status
 
-Tanggal pengecekan: 2026-06-01
+Tanggal pengecekan: 2026-06-08
 
-Sumber audit terbaru: `C:\Users\User\Downloads\Swagger UI (6_1_2026 10ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡04ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡07 AM).html` dan `http://172.16.210.244:8080/swagger/doc.json`.
+Sumber aktif:
 
-Base API server:
+- Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
+- Swagger JSON: `http://194.233.79.180:8080/swagger/doc.json`
+- Internal app server: `litmas@172.16.210.244`, default app URL `http://172.16.210.244:5173/`
+
+`GET http://194.233.79.180:8080/swagger/doc.json` berhasil mengembalikan `200` pada audit ini. API data menggunakan Bearer token. Request tanpa token ke endpoint data utama akan dianggap unauthorized.
+
+## Runtime Target
+
+Frontend memakai relative path dan proxy, bukan direct browser call ke backend:
 
 ```text
-http://172.16.210.244:8080
+/api/*          -> http://194.233.79.180:8080/api/*
+/chat-webhook   -> http://103.140.90.131:5678/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat
+/vector-webhook -> http://103.140.90.131:5678/webhook/update-intent
 ```
 
-Frontend development memakai Vite proxy:
+Saat development dan production proxy, biarkan `VITE_API_BASE_URL=` kosong.
 
-```text
-http://127.0.0.1:5173/api/* -> http://172.16.210.244:8080/api/*
-http://127.0.0.1:5173/chat-webhook -> http://103.140.90.131:5678/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat
-http://127.0.0.1:5173/vector-webhook -> http://103.140.90.131:5678/webhook/update-intent
-```
+## Endpoint Swagger Aktif
 
-Alasan memakai proxy: API bisa di-hit dari shell/local network, tetapi request browser langsung ke IP server berpotensi gagal karena CORS. Dengan proxy, data tetap berasal dari API real, bukan data mock.
+Endpoint berikut muncul di Swagger JSON aktif dan sudah dipetakan ke frontend bila fitur UI-nya tersedia.
 
-## Endpoint yang Dapat Diakses
+| Method | Endpoint |
+| --- | --- |
+| `POST` | `/api/auth/login` |
+| `POST` | `/api/auth/register` |
+| `GET` | `/api/auth/me` |
+| `GET`, `POST` | `/api/roles` |
+| `GET`, `POST` | `/api/usecases` |
+| `GET`, `PUT`, `DELETE` | `/api/usecases/{id}` |
+| `GET`, `POST` | `/api/users` |
+| `GET`, `PUT`, `DELETE` | `/api/users/{id}` |
+| `PUT` | `/api/users/{id}/role` |
+| `GET`, `POST` | `/api/actions/` |
+| `GET`, `PUT`, `DELETE` | `/api/actions/{id}` |
+| `GET`, `POST` | `/api/ai-agents/` |
+| `GET`, `PUT`, `DELETE` | `/api/ai-agents/{id}` |
+| `POST` | `/api/ai-agent-utilities/` |
+| `GET`, `POST` | `/api/external-data/` |
+| `GET`, `PUT`, `DELETE` | `/api/external-data/{id}` |
+| `GET`, `POST` | `/api/intents/` |
+| `GET`, `PUT`, `DELETE` | `/api/intents/{id}` |
+| `GET`, `POST` | `/api/semantic-searches/` |
+| `GET`, `PUT`, `DELETE` | `/api/semantic-searches/{id}` |
+| `GET`, `POST` | `/api/utilities/` |
+| `GET`, `POST` | `/api/vector-collections` |
+| `GET` | `/api/vector-collections/{uuid}` |
+| `POST` | `/api/vector-collections/{uuid}/upload` |
 
-Endpoint berikut sudah dites melalui proxy frontend `http://127.0.0.1:5173` dan mengembalikan status `200`.
+## Frontend Endpoint Map
 
-| Method | Endpoint | Status | Dipakai untuk |
-| --- | --- | --- | --- |
-| `GET` | `/api/ai-agents/` | Bisa diakses | List AI Agent |
-| `GET` | `/api/actions/` | Bisa diakses | List Action |
-| `GET` | `/api/intents/` | Bisa diakses | List Intent |
-| `GET` | `/api/external-data/` | Bisa diakses | List External Data |
-| `GET` | `/api/semantic-searches/` | Bisa diakses | List Semantic Search |
-| `GET` | `/api/utilities/` | Bisa diakses | List Utility |
+`src/api/client.js` currently uses these runtime paths:
 
-Endpoint CRUD yang tersedia dari Swagger live:
-
-| Resource | Create | Read List | Read Detail | Update | Delete |
-| --- | --- | --- | --- | --- | --- |
-| Actions | `/api/actions/` | `/api/actions/` | `/api/actions/{id}` | `/api/actions/{id}` | `/api/actions/{id}` |
-| AI Agents | `/api/ai-agents/` | `/api/ai-agents/` | `/api/ai-agents/{id}` | `/api/ai-agents/{id}` | `/api/ai-agents/{id}` |
-| External Data | `/api/external-data/` | `/api/external-data/` | `/api/external-data/{id}` | `/api/external-data/{id}` | `/api/external-data/{id}` |
-| Intents | `/api/intents/` | `/api/intents/` | `/api/intents/{id}` | `/api/intents/{id}` | `/api/intents/{id}` |
-| Semantic Search | `/api/semantic-searches/` | `/api/semantic-searches/` | `/api/semantic-searches/{id}` | `/api/semantic-searches/{id}` | `/api/semantic-searches/{id}` |
-| Utilities | `/api/utilities/` | `/api/utilities/` | Belum terlihat | Belum terlihat | Belum terlihat |
-| AI Agent Utilities | `/api/ai-agent-utilities/` | Belum tersedia | Belum terlihat | Belum terlihat | Belum terlihat |
-
-## Endpoint Non-Swagger yang Dipakai
-
-Endpoint ini tidak muncul di Swagger backend `:8080`, tetapi dipakai oleh halaman AI Chat dan halaman Vector Collections.
-
-| Method | Frontend path | Target proxy | Status | Dipakai untuk |
-| --- | --- | --- | --- | --- |
-| `POST` | `/chat-webhook` | `http://103.140.90.131:5678/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat` | Public n8n target | Kirim pesan ke AI/n8n workflow |
-| `POST` | `/vector-webhook` | `http://103.140.90.131:5678/webhook/update-intent` | Public n8n target; write tests harus disertai cleanup row PGVector | Upload text/PDF ke VectorDB |
-| `PUT` | `/vector-webhook` | `http://103.140.90.131:5678/webhook/update-intent` | Terdokumentasi di n8n; tidak diekspos di UI untuk menghindari duplicate insert Intent/Action | Sync Intent + Action ke VectorDB |
-
-Contoh respons direct test:
-
-```json
-{
-  "executionStarted": true,
-  "executionId": "2507",
-  "resumeToken": "..."
-}
-```
-
-Jika workflow n8n belum mengembalikan teks jawaban langsung, UI akan menampilkan payload real tersebut, bukan jawaban mock.
-
-Payload frontend:
-
-```json
-{
-  "chatInput": "pesan user",
-  "message": "pesan user",
-  "sessionId": "uuid-session"
-}
-```
-
-Workflow n8n chat menentukan collection yang dipakai dari prompt/chat logic; AI Chat tidak mengirim `collection_name` atau `semantic_search_id`.
-
-Payload VectorDB text:
-
-```json
-{
-  "type": "text",
-  "text": "isi knowledge",
-  "collection_name": "nama_collection"
-}
-```
-
-Payload VectorDB PDF memakai `multipart/form-data` dengan field `type=pdf`, `collection_name`, dan binary field `file`.
-
-Di halaman Vector Collections, `collection_name` dipilih dari data real `/api/semantic-searches/`. Target baru didaftarkan dulu melalui `POST /api/semantic-searches/`, lalu nama yang sama dikirim ke n8n saat upload text/PDF. Endpoint sync tetap terdokumentasi untuk n8n, tetapi tidak diekspos di UI.
-
-Catatan ERD: `semantic_search.collection_name` dan `n8n_vector_collections.name` bukan relasi FK. Keduanya disamakan secara logical by name. Row `semantic_search` membuat collection muncul di halaman Semantic Search dan bisa dipilih oleh Action; workflow n8n membuat/mengisi `n8n_vector_collections` dan `n8n_vectors` memakai nama yang sama.
-
-Catatan cleanup: smoke test write pernah dilakukan ke collection `peraturan` dengan text `Frontend smoke test VectorDB setelah n8n publish. Abaikan dokumen ini jika terlihat di hasil retrieval.` dan `Frontend proxy smoke test VectorDB setelah page dipisah.`. Belum dihapus karena tidak ada delete endpoint/credential database di repo. SQL cleanup disiapkan di `docs/VECTOR_TEST_CLEANUP.md`.
-
-Payload VectorDB sync:
-
-```json
-{
-  "collection_name": "nama_collection"
-}
-```
-
-## Endpoint yang Tidak Dapat Diakses / Belum Tersedia
-
-Endpoint berikut sudah dites dan mengembalikan `404`, atau tidak muncul di Swagger live.
-
-| Method | Endpoint | Status | Dampak di UI |
-| --- | --- | --- | --- |
-| `GET` | `/api/ai-agent-utilities/` | `404 Not Found` | Menu Agent Utilities tidak bisa menampilkan list mapping real. Create tetap tersedia karena `POST` ada di Swagger. |
-| `GET` | `/api/vector-collections/` | `404 Not Found` | Tidak bisa menampilkan tabel `n8n_vector_collections`. |
-| `GET` | `/api/n8n-vector-collections/` | `404 Not Found` | Tidak bisa menampilkan tabel `n8n_vector_collections`. |
-| `GET` | `/api/n8n_vector_collections/` | `404 Not Found` | Tidak bisa menampilkan tabel `n8n_vector_collections`. |
-| `GET` | `/api/vectors/` | `404 Not Found` | Tidak bisa menampilkan tabel `n8n_vectors`. |
-| `GET` | `/api/n8n-vectors/` | `404 Not Found` | Tidak bisa menampilkan tabel `n8n_vectors`. |
-| `GET` | `/api/n8n_vectors/` | `404 Not Found` | Tidak bisa menampilkan tabel `n8n_vectors`. |
-
-## Relasi ERD dan Status Implementasi
-
-| ERD | UI | API status |
+| Resource | Frontend path | Capability |
 | --- | --- | --- |
-| `ai_agent` | AI Agents | Tersedia |
-| `action` | Actions | Tersedia |
-| `intent` | Intents | Tersedia |
-| `external_data` | External Data | Tersedia |
-| `semantic_search` | Semantic Search | Tersedia |
-| `utility` | Utilities | List/create tersedia, update/delete belum terlihat |
-| `ai_agent_utility` | Agent Utilities | Create tersedia, list belum tersedia |
-| `n8n_vector_collections` | Vector Collections | Tidak ada Swagger read endpoint; dibuat/dipakai oleh n8n PGVector lewat `collection_name` |
-| `n8n_vectors` | Vector Collections | Tidak ada Swagger read endpoint; diisi oleh n8n PGVector dari upload text/PDF. Endpoint sync n8n terdokumentasi tetapi tersembunyi dari UI. |
+| Auth login | `/api/auth/login` | Login |
+| Auth profile | `/api/auth/me` | Profile load |
+| Actions | `/api/actions/` | List, detail, create, update, delete |
+| AI Agents | `/api/ai-agents/` | List, detail, create, update, delete |
+| External Data | `/api/external-data/` | List, detail, create, update, delete |
+| Intents | `/api/intents/` | List, detail, create, update, delete |
+| Usecases | `/api/usecases/` | List, detail, create, update, delete |
+| Users | `/api/users/` | List, detail, create, update, delete |
+| Roles | `/api/roles/` | List and create |
+| Semantic Search | `/api/semantic-searches/` | List, detail, create, update, delete |
+| Utilities | `/api/utilities` | List and create |
+| Agent Utilities | `/api/ai-agent-utilities/` | Create only |
+| Vector Collections | `/api/vector-collections` | List, detail/view file, create, upload file |
 
-## Catatan Frontend
+Runtime slash behavior has previously differed from Swagger for `roles`, `usecases`, `users`, `utilities`, and `vector-collections`. Keep `src/api/client.js` on the known working paths unless a new live probe proves a change is safe.
 
-- Tidak ada mock data di aplikasi.
-- Jika endpoint gagal, UI menampilkan data kosong dan status error, bukan mengisi data palsu.
-- Tombol Add/Edit/Delete hanya aktif jika method terkait tersedia di konfigurasi API frontend.
-- Tombol Edit/View untuk resource CRUD lengkap mencoba mengambil data detail dari `GET /api/.../{id}`. Jika detail endpoint mengembalikan 404 walaupun list endpoint memiliki row tersebut, UI fallback ke data list agar form/detail tetap bisa dibuka.
-- Data collection existing diambil dari `semantic_search.collection_name` melalui endpoint `/api/semantic-searches/`.
-- Halaman Vector Collections memakai collection yang sudah dibuat di halaman Semantic Search. `POST` text atau `POST` PDF ke n8n memakai `collection_name` yang sama untuk mengisi PGVector.
-- Halaman AI Chat memakai respons real dari `/chat-webhook`; tidak ada fallback jawaban mock. Jika n8n mengembalikan `executionStarted`, UI menampilkan status workflow yang lebih readable, bukan JSON mentah.
+## Non-Swagger Endpoints Used by UI
 
+| Method | Frontend path | Target | UI status |
+| --- | --- | --- | --- |
+| `POST` | `/chat-webhook` | n8n chat workflow | Exposed by AI Chat |
+| `POST` | `/vector-webhook` | n8n VectorDB workflow | Exposed by Vector Collections for text/PDF indexing |
+| `PUT` | `/vector-webhook` | n8n VectorDB workflow | Documented only; hidden from UI to avoid duplicate vector rows |
 
-## UI/UX Implementation Notes
+Do not run write smoke tests against `/vector-webhook` without a cleanup path. If a test write is unavoidable, use `docs/VECTOR_TEST_CLEANUP.md` as the cleanup reference.
 
-Implemented on 2026-06-01:
+## Known Unsupported Swagger CRUD
 
-- Action form is conditional by `action_type` and only shows the relevant target dropdown.
-- Action payload clears non-selected target relation fields before submit.
-- Tables now show relationship-aware labels and target summaries instead of only raw foreign key IDs.
-- JSON fields have inline validation, placeholders, and a `Format JSON` control.
-- Modules without read endpoints show unavailable panels with the missing endpoint names.
-- Table rows can open a read-only detail drawer; CRUD-complete resources fetch `GET /api/.../{id}` before edit/detail where available.
-- Intent Action dropdown now shows detailed Action labels: id, action type, target, and parameter summary.
-- AI Chat page is available and posts to the n8n webhook through the Vite `/chat-webhook` proxy.
-- AI Chat sends `chatInput`, `message`, and `sessionId` to the webhook; n8n chooses the collection from prompt/chat logic.
+These operations are still not available as complete CRUD in Swagger/API and should stay disabled in UI:
 
-REST API availability was rechecked on 2026-06-01. The active/missing endpoint set is unchanged from the prior audit.
+- `GET`, `PUT`, `DELETE` for `/api/ai-agent-utilities/`.
+- Detail, update, and delete endpoints for Utilities.
+- Direct CRUD for `n8n_vectors`.
 
+Vector collection read/list/file upload is available through `/api/vector-collections`, but vector chunk rows remain managed by n8n/PGVector rather than a frontend CRUD page.
 
+## Frontend Behavior Notes
+
+- There is no mock data.
+- `normalizeList()` and `normalizeRecord()` support API wrappers such as `{ data: [...] }` and `{ data: {...} }`.
+- All authenticated `/api/*` requests send `Authorization: Bearer <token>` after login.
+- A `401` response triggers unauthorized session handling and returns the user to login.
+- Some detail endpoints can return `404` for rows present in list responses; view/edit flows should fall back to the list row instead of blocking the user.
