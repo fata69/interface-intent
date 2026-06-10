@@ -86,10 +86,9 @@ export function VectorCollectionPanel({ semanticCollections = [], vectorCollecti
   const fileInputRef = useRef(null);
 
   const collectionOptions = useMemo(() => {
-    const vectorNames = vectorCollections.map(getCollectionName).filter(Boolean);
     const semanticNames = semanticCollections.map(getCollectionName).filter(Boolean);
-    return [...new Set([...vectorNames, ...semanticNames])].sort();
-  }, [semanticCollections, vectorCollections]);
+    return [...new Set(semanticNames)].sort();
+  }, [semanticCollections]);
   const filteredCollectionOptions = useMemo(() => {
     const query = collectionQuery.trim().toLowerCase();
     if (!query) return collectionOptions;
