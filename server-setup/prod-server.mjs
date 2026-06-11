@@ -26,7 +26,9 @@ const host = process.env.HOST || '0.0.0.0';
 const port = Number(process.env.PORT || 5173);
 const apiTarget = process.env.API_TARGET || 'http://194.233.79.180:8080';
 const n8nTarget = process.env.N8N_TARGET || 'http://103.140.90.131:5678';
-const chatWebhookPath = process.env.CHAT_WEBHOOK_PATH || '/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat';
+const aiwoEngineTarget = process.env.AIWO_ENGINE_TARGET || 'http://194.233.79.180:8081';
+const chatWebhookPath = process.env.CHAT_WEBHOOK_PATH || '/api/v1/chat';
+const intentSyncPath = process.env.INTENT_SYNC_PATH || '/api/v1/update';
 const vectorWebhookPath = process.env.VECTOR_WEBHOOK_PATH || '/webhook/update-intent';
 
 const mimeTypes = {
@@ -143,7 +145,12 @@ const server = createServer((req, res) => {
   }
 
   if (req.url?.startsWith('/chat-webhook')) {
-    proxy(req, res, n8nTarget, chatWebhookPath);
+    proxy(req, res, aiwoEngineTarget, chatWebhookPath);
+    return;
+  }
+
+  if (req.url?.startsWith('/intent-sync')) {
+    proxy(req, res, aiwoEngineTarget, intentSyncPath);
     return;
   }
 
@@ -158,6 +165,7 @@ const server = createServer((req, res) => {
 server.listen(port, host, () => {
   console.log(`Intent & Agent Management Console running at http://${host}:${port}`);
   console.log(`Proxy /api -> ${apiTarget}`);
-  console.log(`Proxy /chat-webhook -> ${n8nTarget}${chatWebhookPath}`);
+  console.log(`Proxy /chat-webhook -> ${aiwoEngineTarget}${chatWebhookPath}`);
+  console.log(`Proxy /intent-sync -> ${aiwoEngineTarget}${intentSyncPath}`);
   console.log(`Proxy /vector-webhook -> ${n8nTarget}${vectorWebhookPath}`);
 });

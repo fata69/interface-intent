@@ -81,7 +81,8 @@ Request API memakai relative path `/api/...` dan diproxy oleh Vite/prod server k
 
 ```text
 /api/*          -> http://194.233.79.180:8080/api/*
-/chat-webhook   -> http://103.140.90.131:5678/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat
+/chat-webhook   -> http://194.233.79.180:8081/api/v1/chat
+/intent-sync    -> http://194.233.79.180:8081/api/v1/update
 /vector-webhook -> http://103.140.90.131:5678/webhook/update-intent
 ```
 
@@ -97,19 +98,19 @@ Jangan expose self-register publik. Untuk dashboard, user dibuat dari admin-only
 
 ## AI Chat
 
-AI Chat mengirim pesan ke n8n dengan payload:
+AI Chat mengirim pesan ke AIWO chat service dengan payload:
 
 ```json
 {
+  "sessionId": "uuid-session",
   "chatInput": "pesan user",
-  "message": "pesan user",
-  "sessionId": "uuid-session"
+  "usecaseId": 1
 }
 ```
 
-Collection untuk retrieval ditentukan oleh workflow n8n dari prompt/chat logic, bukan dari selector frontend.
+User harus memilih usecase sebelum pesan dikirim. `usecaseId` dikirim sebagai number dan tidak boleh di-hardcode.
 
-AI Chat menyimpan `sessionId`, pesan, dan draft di `sessionStorage` melalui store feature. Tombol reset chat membuat session baru dan menghapus state tersimpan.
+AI Chat menyimpan `sessionId`, pesan, draft, dan selected usecase di `sessionStorage` melalui store feature. Tombol reset chat membuat session baru dan menghapus pesan/draft, tetapi mempertahankan usecase yang dipilih.
 
 ## Vector Collections
 

@@ -16,7 +16,8 @@ Frontend memakai relative path dan proxy, bukan direct browser call ke backend:
 
 ```text
 /api/*          -> http://194.233.79.180:8080/api/*
-/chat-webhook   -> http://103.140.90.131:5678/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat
+/chat-webhook   -> http://194.233.79.180:8081/api/v1/chat
+/intent-sync    -> http://194.233.79.180:8081/api/v1/update
 /vector-webhook -> http://103.140.90.131:5678/webhook/update-intent
 ```
 
@@ -79,7 +80,8 @@ Runtime slash behavior has previously differed from Swagger for `roles`, `usecas
 
 | Method | Frontend path | Target | UI status |
 | --- | --- | --- | --- |
-| `POST` | `/chat-webhook` | n8n chat workflow | Exposed by AI Chat |
+| `POST` | `/chat-webhook` | AIWO chat service | Exposed by AI Chat |
+| `POST` | `/intent-sync` | AIWO intent cache reload | Exposed by Intents sync button |
 | `POST` | `/vector-webhook` | n8n VectorDB workflow | Exposed by Vector Collections > Upload Knowledge for text/PDF indexing |
 | `PUT` | `/vector-webhook` | n8n VectorDB workflow | Documented only; hidden from UI to avoid duplicate vector rows |
 

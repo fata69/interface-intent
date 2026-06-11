@@ -304,17 +304,43 @@ ERD note: `semantic_search.collection_name` and `n8n_vector_collections.name` ar
 POST /chat-webhook
 ```
 
+Proxy target:
+
+```text
+http://194.233.79.180:8081/api/v1/chat
+```
+
 Payload:
 
 ```json
 {
+  "sessionId": "string",
   "chatInput": "string",
-  "message": "string",
-  "sessionId": "string"
+  "usecaseId": 1
 }
 ```
 
-AI Chat is separate from Swagger CRUD. It does not send `collection_name` or `semantic_search_id`; the n8n workflow decides routing from prompt/chat logic and backend relations.
+AI Chat is separate from Swagger CRUD. User must select a usecase before sending a message. The frontend sends `usecaseId` as a number and does not send legacy n8n fields such as `action` or `message`.
+
+## Intent Sync
+
+```text
+POST /intent-sync
+```
+
+Proxy target:
+
+```text
+http://194.233.79.180:8081/api/v1/update
+```
+
+Payload:
+
+```json
+{}
+```
+
+This endpoint reloads/synchronizes the AIWO intent cache from backend data. The Intents page exposes it as the `Sync Intents` button.
 
 ## VectorDB n8n Webhook
 

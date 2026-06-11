@@ -15,9 +15,14 @@ export default defineConfig({
         },
       },
       '/chat-webhook': {
-        target: 'http://103.140.90.131:5678',
+        target: 'http://194.233.79.180:8081',
         changeOrigin: true,
-        rewrite: () => '/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat',
+        rewrite: () => '/api/v1/chat',
+      },
+      '/intent-sync': {
+        target: 'http://194.233.79.180:8081',
+        changeOrigin: true,
+        rewrite: () => '/api/v1/update',
       },
       '/vector-webhook': {
         target: 'http://103.140.90.131:5678',

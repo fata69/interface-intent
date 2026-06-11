@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api } from '../../api/client';
 
 const chatStorageKey = 'intent-agent-ai-chat-session';
 const initialMessages = [{ role: 'assistant', content: 'Halo, silakan kirim pesan untuk menguji AI.' }];
@@ -9,7 +10,7 @@ function getSessionId() {
 }
 
 function createChatState() {
-  return { sessionId: getSessionId(), messages: initialMessages, draft: '', loading: false };
+  return { sessionId: getSessionId(), messages: initialMessages, draft: '', loading: false, usecaseId: '' };
 }
 
 function extractChatReply(payload) {
@@ -21,22 +22,10 @@ function extractChatReply(payload) {
 
   if (payload?.executionStarted) {
     const executionId = payload.executionId ? ` Execution ID: ${payload.executionId}.` : '';
-    return `Workflow n8n sudah menerima pesan.${executionId} Webhook belum mengirim teks jawaban langsung ke frontend.`;
+    return `AIWO sudah menerima pesan.${executionId} Service belum mengirim teks jawaban langsung ke frontend.`;
   }
 
   return JSON.stringify(payload, null, 2);
-}
-
-async function readChatError(response) {
-  const text = await response.text().catch(() => response.statusText);
-  if (!text) return response.statusText;
-
-  try {
-    const payload = JSON.parse(text);
-    return payload.error || payload.message || response.statusText;
-  } catch {
-    return text;
-  }
 }
 
 const chatSessionStorage = {
@@ -80,12 +69,18 @@ export const useChatStore = create(
 
       setDraft: (draft) => set({ draft }),
 
-      resetChat: () => set(createChatState()),
+      setUsecaseId: (usecaseId) => set({ usecaseId: usecaseId == null ? '' : String(usecaseId) }),
 
-      sendMessage: async () => {
-        const { draft, loading, messages, sessionId } = get();
+      resetChat: () => {
+        const { usecaseId } = get();
+        set({ ...createChatState(), usecaseId });
+      },
+
+      sendMessage: async ({ usecaseId: nextUsecaseId } = {}) => {
+        const { draft, loading, messages, sessionId, usecaseId } = get();
         const message = draft.trim();
-        if (!message || loading) return;
+        const selectedUsecaseId = nextUsecaseId || usecaseId;
+        if (!message || loading || !selectedUsecaseId) return;
 
         set({
           draft: '',
@@ -94,24 +89,11 @@ export const useChatStore = create(
         });
 
         try {
-          const response = await fetch('/chat-webhook', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'sendMessage',
-              chatInput: message,
-              message,
-              sessionId,
-            }),
+          const payload = await api.sendAiChat({
+            sessionId,
+            chatInput: message,
+            usecaseId: Number(selectedUsecaseId),
           });
-
-          if (!response.ok) {
-            const errorText = await readChatError(response);
-            throw new Error(errorText || response.statusText);
-          }
-
-          const contentType = response.headers.get('content-type') || '';
-          const payload = contentType.includes('application/json') ? await response.json() : await response.text();
           set((current) => ({
             loading: false,
             messages: [...current.messages, { role: 'assistant', content: extractChatReply(payload) }],
@@ -127,7 +109,7 @@ export const useChatStore = create(
     {
       name: chatStorageKey,
       storage: chatSessionStorage,
-      partialize: ({ sessionId, messages, draft }) => ({ sessionId, messages, draft }),
+      partialize: ({ sessionId, messages, draft, usecaseId }) => ({ sessionId, messages, draft, usecaseId }),
       merge: (persistedState, currentState) => ({
         ...currentState,
         ...persistedState,
@@ -135,6 +117,7 @@ export const useChatStore = create(
           ? persistedState.messages
           : initialMessages,
         draft: typeof persistedState?.draft === 'string' ? persistedState.draft : '',
+        usecaseId: persistedState?.usecaseId == null ? '' : String(persistedState.usecaseId),
         loading: false,
       }),
     },
@@ -143,6 +126,7 @@ export const useChatStore = create(
 
 export const chatStore = {
   resetChat: () => useChatStore.getState().resetChat(),
-  sendMessage: () => useChatStore.getState().sendMessage(),
+  sendMessage: (options) => useChatStore.getState().sendMessage(options),
   setDraft: (draft) => useChatStore.getState().setDraft(draft),
+  setUsecaseId: (usecaseId) => useChatStore.getState().setUsecaseId(usecaseId),
 };

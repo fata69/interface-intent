@@ -171,9 +171,11 @@ h3 { font-size: 17px; }
 
 .chat-panel { overflow: hidden; border: 1px solid #d9e2ec; border-radius: 8px; background: #fff; box-shadow: 0 18px 40px rgba(15,23,42,.06); }
 .chat-layout { display: grid; grid-template-rows: auto minmax(360px, 58vh) auto; min-height: 620px; }
-.chat-meta { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(180px, auto); align-items: center; gap: 14px; padding: 16px; border-bottom: 1px solid #e5edf5; background: #f8fafc; }
+.chat-meta { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(240px, 320px) minmax(180px, auto); align-items: center; gap: 14px; padding: 16px; border-bottom: 1px solid #e5edf5; background: #f8fafc; }
 .chat-meta strong { color: #111827; }
 .chat-meta code { max-width: 100%; overflow: hidden; color: #475569; text-overflow: ellipsis; white-space: nowrap; }
+.chat-usecase-field { display: grid; gap: 6px; color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.chat-usecase-field select { width: 100%; height: 38px; background: #fff; color: #172033; font-size: 14px; font-weight: 700; text-transform: none; }
 .chat-session { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
 .chat-session span { grid-column: 1 / -1; color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; }
 .chat-session .ghost-button { width: 34px; min-height: 34px; }

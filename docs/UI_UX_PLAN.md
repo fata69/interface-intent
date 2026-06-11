@@ -57,9 +57,10 @@ Do not add a separate Vectors CRUD page until the API exposes direct read endpoi
 - Empty states distinguish between no data and no search result.
 - CRUD modals autofocus the first field, support Escape-to-close when idle, use resource-specific submit labels, and disable controls while saving.
 - Detail endpoints that fail can fall back to the list row for view/edit flows.
-- AI Chat posts to `/chat-webhook` and renders real n8n responses.
-- AI Chat sends only `chatInput`, `message`, and `sessionId`; collection routing is handled by n8n.
+- AI Chat posts to AIWO through `/chat-webhook` and renders real responses.
+- AI Chat requires a selected usecase before sending and sends `sessionId`, `chatInput`, and numeric `usecaseId`.
 - AI Chat state persists in `sessionStorage` for the browser session.
+- Intents exposes a `Sync Intents` header action for AIWO cache synchronization through `/intent-sync`.
 - Vector Collections uses Semantic Search collection names, native `/api/vector-collections`, and n8n `/vector-webhook` indexing.
 - Native vector collection rows can be listed, created when needed, and used to upload, preview, or explicitly download the original file.
 - Vector Collections is organized around the selected collection: choose the target collection first, then view the saved knowledge file and upload Text/PDF for that collection.
@@ -92,6 +93,7 @@ Partially backed in UI:
 Separate from Swagger CRUD:
 
 - AI Chat via `/chat-webhook`.
+- Intent cache synchronization via `/intent-sync`.
 - Vector indexing via `/vector-webhook`.
 
 ## Remaining UX Work

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Copy, Send } from 'lucide-react';
 import { modules } from '../../config/resources';
+import { getUserUsecases } from '../auth/access';
 import { PageHeader, StatusStrip } from '../../templates/components/PageHeader';
+import { itemLabel } from '../../utils/resourceUtils.jsx';
 import { chatStore, useChatStore } from './chatStore';
 
 function fallbackCopyText(value) {
@@ -17,9 +19,32 @@ function fallbackCopyText(value) {
   return copied;
 }
 
-export function ChatPage() {
+function usecaseIdOf(usecase) {
+  const id = usecase?.id ?? usecase?.usecase_id;
+  return id == null || id === '' ? '' : String(id);
+}
+
+function resolveChatUsecases(user, data) {
+  const apiUsecases = Array.isArray(data?.usecases) ? data.usecases : [];
+  const usecasesById = new Map(apiUsecases.map((usecase) => [usecaseIdOf(usecase), usecase]));
+  const assignedUsecases = getUserUsecases(user);
+  const source = assignedUsecases.length ? assignedUsecases : apiUsecases;
+  const uniqueUsecases = new Map();
+
+  source.forEach((usecase) => {
+    const id = usecaseIdOf(usecase);
+    if (!id) return;
+    uniqueUsecases.set(id, usecasesById.get(id) || usecase);
+  });
+
+  return [...uniqueUsecases.values()];
+}
+
+export function ChatPage({ data, user }) {
   const [copied, setCopied] = useState(false);
-  const { draft, loading, messages, sessionId } = useChatStore();
+  const { draft, loading, messages, sessionId, usecaseId } = useChatStore();
+  const chatUsecases = resolveChatUsecases(user, data);
+  const selectedUsecaseIsValid = Boolean(usecaseId) && chatUsecases.some((usecase) => usecaseIdOf(usecase) === String(usecaseId));
   const threadEndRef = useRef(null);
 
   useEffect(() => {
@@ -31,6 +56,10 @@ export function ChatPage() {
     const timer = window.setTimeout(() => setCopied(false), 1400);
     return () => window.clearTimeout(timer);
   }, [copied]);
+
+  useEffect(() => {
+    if (usecaseId && chatUsecases.length && !selectedUsecaseIsValid) chatStore.setUsecaseId('');
+  }, [chatUsecases.length, selectedUsecaseIsValid, usecaseId]);
 
   async function copySessionId() {
     try {
@@ -47,13 +76,24 @@ export function ChatPage() {
 
   async function sendChatMessage(event) {
     event.preventDefault();
-    chatStore.sendMessage();
+    if (!readyToSend) return;
+    chatStore.sendMessage({ usecaseId });
   }
+
+  const hasSelectedUsecase = Boolean(usecaseId) && selectedUsecaseIsValid;
+  const readyToSend = Boolean(draft.trim()) && hasSelectedUsecase && !loading;
+  const statusText = loading
+    ? 'Mengirim pesan...'
+    : hasSelectedUsecase
+      ? 'AI Chat siap digunakan.'
+      : chatUsecases.length
+        ? 'Pilih usecase untuk mulai chat.'
+        : 'Akun belum memiliki usecase aktif untuk chat.';
 
   return (
     <>
       <PageHeader config={modules.chat} countLabel="chat session" onRefresh={chatStore.resetChat} refreshTitle="Reset chat" />
-      <StatusStrip>{loading ? 'Mengirim pesan...' : 'AI Chat siap digunakan.'}</StatusStrip>
+      <StatusStrip warning={!hasSelectedUsecase}>{statusText}</StatusStrip>
 
       <section className="chat-panel">
         <div className="chat-layout">
@@ -62,6 +102,21 @@ export function ChatPage() {
               <p className="eyebrow">AI Chat</p>
               <strong>Uji percakapan</strong>
             </div>
+            <label className="chat-usecase-field" htmlFor="chat-usecase-select">
+              <span>Usecase</span>
+              <select
+                id="chat-usecase-select"
+                value={selectedUsecaseIsValid ? usecaseId : ''}
+                onChange={(event) => chatStore.setUsecaseId(event.target.value)}
+                disabled={loading || !chatUsecases.length}
+              >
+                <option value="">Pilih usecase</option>
+                {chatUsecases.map((usecase) => {
+                  const id = usecaseIdOf(usecase);
+                  return <option key={id} value={id}>{itemLabel('usecases', usecase, data)}</option>;
+                })}
+              </select>
+            </label>
             <div className="chat-session">
               <span>Session ID</span>
               <code>{sessionId}</code>
@@ -91,7 +146,7 @@ export function ChatPage() {
             <textarea
               rows={3}
               value={draft}
-              placeholder="Tulis pesan untuk AI"
+              placeholder={hasSelectedUsecase ? 'Tulis pesan untuk AI' : 'Pilih usecase dulu untuk mulai chat'}
               onChange={(event) => chatStore.setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
@@ -100,7 +155,7 @@ export function ChatPage() {
                 }
               }}
             />
-            <button type="submit" className="primary-button" disabled={loading || !draft.trim()}>
+            <button type="submit" className="primary-button" disabled={!readyToSend}>
               <Send size={18} />
               Send
             </button>

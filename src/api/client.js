@@ -70,6 +70,31 @@ async function request(path, options = {}) {
   return response.json().catch(() => null);
 }
 
+async function requestContent(path, options = {}) {
+  const token = authTokenProvider();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
+
+  const response = await fetch(`${baseUrl}${path}`, {
+    headers,
+    ...options,
+  });
+
+  if (!response.ok) {
+    const message = await responseError(response);
+    if (response.status === 401) unauthorizedHandler();
+    throw new Error(message || response.statusText);
+  }
+
+  if (response.status === 204) return null;
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) return response.json().catch(() => null);
+  return response.text().catch(() => null);
+}
+
 function filenameFromDisposition(disposition) {
   if (!disposition) return '';
   const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
@@ -147,6 +172,14 @@ export const api = {
     body: JSON.stringify(payload),
   }),
   me: () => request('/api/auth/me'),
+  syncIntents: () => requestContent('/intent-sync', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+  sendAiChat: (payload) => requestContent('/chat-webhook', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
   assignUserRole: (id, roleId) => request(withId(endpoints.users.path, `${id}/role`), {
     method: 'PUT',
     body: JSON.stringify({ role_id: Number(roleId) }),

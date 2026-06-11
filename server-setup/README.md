@@ -6,13 +6,14 @@ Panduan ini untuk menjalankan Intent & Agent Management Console di server intern
 litmas@172.16.210.244
 ```
 
-Aplikasi tetap frontend React. `server-setup/prod-server.mjs` hanya serve static `dist` dan reverse proxy ke REST API serta n8n.
+Aplikasi tetap frontend React. `server-setup/prod-server.mjs` hanya serve static `dist` dan reverse proxy ke REST API, AIWO engine, serta n8n VectorDB.
 
 ## Runtime Target
 
 - App URL: `http://172.16.210.244:5173/`
 - Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
 - API target: `http://194.233.79.180:8080`
+- AIWO engine target: `http://194.233.79.180:8081`
 - n8n target: `http://103.140.90.131:5678`
 - PM2 process name: `interface-intent`
 - Server project folder: `~/interface-intent/interface-intent-migrate`
@@ -143,12 +144,14 @@ VITE_API_BASE_URL=
 HOST=0.0.0.0
 PORT=5173
 API_TARGET=http://194.233.79.180:8080
+AIWO_ENGINE_TARGET=http://194.233.79.180:8081
 N8N_TARGET=http://103.140.90.131:5678
-CHAT_WEBHOOK_PATH=/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat
+CHAT_WEBHOOK_PATH=/api/v1/chat
+INTENT_SYNC_PATH=/api/v1/update
 VECTOR_WEBHOOK_PATH=/webhook/update-intent
 ```
 
-Biarkan `VITE_API_BASE_URL=` kosong supaya browser memanggil relative path `/api`, `/chat-webhook`, dan `/vector-webhook`. `prod-server.mjs` yang meneruskan request ke server tujuan.
+Biarkan `VITE_API_BASE_URL=` kosong supaya browser memanggil relative path `/api`, `/chat-webhook`, `/intent-sync`, dan `/vector-webhook`. `prod-server.mjs` yang meneruskan request ke server tujuan.
 
 ## Kalau `git pull` Gagal Karena `package-lock.json`
 
@@ -188,7 +191,7 @@ Login, lalu cek flow utama:
 - Semantic Search list/load.
 - Vector Collections > Upload Knowledge untuk pilih collection dan upload Text/PDF.
 - Vector Collections > Collection Files untuk buka detail file collection, lalu Open File untuk preview atau Download bila memang perlu unduh.
-- AI Chat kirim pesan.
+- AI Chat pilih usecase lalu kirim pesan.
 
 Jangan smoke test `POST /vector-webhook` kecuali ada rencana cleanup, karena request itu menulis row ke PGVector.
 

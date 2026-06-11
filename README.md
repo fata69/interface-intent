@@ -8,6 +8,7 @@ React/Vite dashboard for configuring AI chatbot resources from the active ERD an
 - Default app URL: `http://172.16.210.244:5173/`
 - Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
 - REST API backend: `http://194.233.79.180:8080`
+- AIWO engine/chat/cache: `http://194.233.79.180:8081`
 - n8n host: `http://103.140.90.131:5678`
 - ERD source: `ERD.mmd` and `ERD_VIEW.html` in the repository root
 
@@ -30,8 +31,13 @@ Browser
 
 Browser
   -> /chat-webhook via proxy
-  -> http://103.140.90.131:5678/webhook/.../chat
-  -> Existing n8n chat workflow
+  -> http://194.233.79.180:8081/api/v1/chat
+  -> AIWO chat service
+
+Browser
+  -> /intent-sync via proxy
+  -> http://194.233.79.180:8081/api/v1/update
+  -> AIWO intent cache reload
 
 Browser
   -> /vector-webhook via proxy
@@ -97,7 +103,7 @@ npm test
 
 ## Production on Internal Server
 
-Recommended deployment uses `server-setup/prod-server.mjs`. It serves `dist` and proxies `/api`, `/chat-webhook`, and `/vector-webhook`.
+Recommended deployment uses `server-setup/prod-server.mjs`. It serves `dist` and proxies `/api`, `/chat-webhook`, `/intent-sync`, and `/vector-webhook`.
 
 Push changes from local development first:
 
@@ -126,7 +132,8 @@ Runtime defaults:
 ```text
 App URL:           http://172.16.210.244:5173/
 REST API proxy:    /api -> http://194.233.79.180:8080
-Chat webhook:      /chat-webhook -> http://103.140.90.131:5678/webhook/.../chat
+AIWO chat:         /chat-webhook -> http://194.233.79.180:8081/api/v1/chat
+Intent sync:       /intent-sync -> http://194.233.79.180:8081/api/v1/update
 Vector webhook:    /vector-webhook -> http://103.140.90.131:5678/webhook/update-intent
 ```
 
@@ -156,7 +163,7 @@ Auth uses `POST /api/auth/login`, stores the Bearer token, loads profile from `G
 - Roles: admin-only list and create.
 - Users: admin-only list, detail, create, update, assign role, delete, and usecase assignment.
 - Vector Collections: split into Upload Knowledge and Collection Files. Upload Knowledge selects a collection target, creates a native row when needed, uploads the original TXT/PDF file, and sends content to n8n indexing. Collection Files lists saved collection files in a paginated sortable table with upload time when the backend provides it, opens a detail drawer first, then separates original file preview through Open File from explicit Download.
-- AI Chat: sends real messages to n8n through `/chat-webhook`.
+- AI Chat: sends real messages to AIWO through `/chat-webhook`, with a selected `usecaseId`.
 
 ## Vector Collections Flow
 
