@@ -57,6 +57,33 @@ function compareValues(left, right) {
   return String(left).localeCompare(String(right), undefined, { numeric: true, sensitivity: 'base' });
 }
 
+function unwrapDetailPayload(payload) {
+  if (payload?.data && !Array.isArray(payload.data)) return payload.data;
+  if (payload?.item) return payload.item;
+  return payload || {};
+}
+
+function textFromDetailEntry(entry) {
+  if (!entry) return '';
+  if (typeof entry === 'string') return entry;
+  if (typeof entry !== 'object') return '';
+  return entry.text || entry.content || entry.pageContent || entry.document || entry.value || '';
+}
+
+function vectorDetailTextItems(item) {
+  const sources = [item?.texts, item?.text, item?.vector_texts, item?.chunks, item?.vectors, item?.documents];
+  if (Array.isArray(item?.data)) sources.push(item.data);
+
+  const values = sources.flatMap((source) => {
+    if (!source) return [];
+    if (typeof source === 'string') return [source];
+    if (Array.isArray(source)) return source.map(textFromDetailEntry);
+    return [textFromDetailEntry(source)];
+  });
+
+  return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))].slice(0, 5);
+}
+
 export function VectorCollectionsPage() {
   return <Navigate to={routeByModule.vectorKnowledgeUpload} replace />;
 }
@@ -158,6 +185,30 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
         <SortIcon active={active} direction={sort.direction} />
       </button>
     );
+  }
+
+  async function openCollectionDetail(item) {
+    if (!item?.uuid) {
+      setSelectedFile(item);
+      return;
+    }
+
+    setFileAction(`detail-${item.uuid}`);
+    setStatusType('neutral');
+    setStatus(`Memuat detail ${vectorCollectionName(item)}...`);
+
+    try {
+      const payload = await api.vectorCollectionDetail(item.uuid);
+      const detail = unwrapDetailPayload(payload);
+      setSelectedFile({ ...item, ...detail, uuid: detail.uuid || item.uuid });
+      setStatus('');
+    } catch (error) {
+      setSelectedFile(item);
+      setStatusType('error');
+      setStatus(`Detail belum berhasil dibuka, memakai data dari daftar: ${error.message || 'request gagal'}.`);
+    } finally {
+      setFileAction('');
+    }
   }
 
   async function viewFile(item) {
@@ -269,7 +320,7 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
                 const fileLabel = vectorCollectionFileLabel(item);
                 const indexFailure = getVectorIndexFailure(name);
                 return (
-                  <tr key={item.uuid || name} className="clickable-row" onClick={() => setSelectedFile(item)}>
+                  <tr key={item.uuid || name} className="clickable-row" onClick={() => openCollectionDetail(item)}>
                     <td className="cell-row-number">{startIndex + index + 1}</td>
                     <td className="cell-collection"><strong title={name}>{name}</strong></td>
                     <td className="cell-file" title={files.map((entry) => entry.label).join(', ') || 'Upload ulang untuk menyimpan file asli'}>
@@ -278,7 +329,7 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
                     </td>
                     <td className="cell-uploaded_at">{formatCollectionTime(item)}</td>
                     <td className="row-actions" onClick={(event) => event.stopPropagation()}>
-                      <button className="secondary-button" type="button" onClick={() => setSelectedFile(item)} disabled={loading || !item.uuid}>Detail</button>
+                      <button className="secondary-button" type="button" onClick={() => openCollectionDetail(item)} disabled={loading || !item.uuid || Boolean(fileAction)}>{fileAction === `detail-${item.uuid}` ? 'Loading...' : 'Detail'}</button>
                     </td>
                   </tr>
                 );
@@ -336,6 +387,7 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
           const selectedFiles = vectorMetadataFiles(selectedFile);
           const hasOriginalFile = selectedFiles.length > 0;
           const indexFailure = getVectorIndexFailure(vectorCollectionName(selectedFile));
+          const detailTexts = vectorDetailTextItems(selectedFile);
           return (
         <aside className="drawer-backdrop">
           <section className="detail-drawer collection-file-drawer">
@@ -359,6 +411,14 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
               <div className="collection-file-metadata-list">
                 {selectedFiles.map((entry) => (
                   <span key={entry.id}>{entry.label}</span>
+                ))}
+              </div>
+            )}
+
+            {detailTexts.length > 0 && (
+              <div className="collection-file-metadata-list text-preview-list">
+                {detailTexts.map((entry, index) => (
+                  <span key={`${selectedFile.uuid || vectorCollectionName(selectedFile)}-text-${index}`}>{entry}</span>
                 ))}
               </div>
             )}

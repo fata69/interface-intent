@@ -189,6 +189,7 @@ export const api = {
     method: 'PUT',
     body: JSON.stringify({ role_id: Number(roleId) }),
   }),
+  vectorCollectionDetail: (uuid) => request(withId(endpoints.vectorCollections.path, uuid)),
   vectorCollectionFile: (uuid) => requestFile(`${withId(endpoints.vectorCollections.path, uuid)}/download`),
   deleteVectorCollection: (uuid) => request(withId(endpoints.vectorCollections.path, uuid), { method: 'DELETE' }),
   createVectorCollection: (payload) => request(endpoints.vectorCollections.path, {
