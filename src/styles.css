@@ -180,7 +180,10 @@ h3 { font-size: 17px; }
 .resource-vector-collection-files .secondary-button { min-height: 34px; padding: 0 10px; font-size: 12px; }
 .collection-file-metadata-list { display: grid; gap: 6px; margin: 0 0 14px; }
 .collection-file-metadata-list span { overflow: hidden; padding: 8px 10px; border: 1px solid #d9e2ec; border-radius: 8px; background: #f8fafc; color: #334155; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.collection-file-metadata-list.text-preview-list span { display: -webkit-box; max-height: 74px; line-height: 1.45; white-space: normal; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.text-preview-section { margin: 0 0 14px; }
+.text-preview-section p { margin: 0 0 8px; color: #64748b; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.collection-file-metadata-list.text-preview-list { max-height: 220px; overflow: auto; margin-bottom: 0; padding-right: 4px; }
+.collection-file-metadata-list.text-preview-list span { display: -webkit-box; max-height: 62px; line-height: 1.45; white-space: normal; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .collection-file-hint.warning { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
 
 .chat-panel { overflow: hidden; border: 1px solid #d9e2ec; border-radius: 8px; background: #fff; box-shadow: 0 18px 40px rgba(15,23,42,.06); }

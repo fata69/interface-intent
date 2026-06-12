@@ -77,6 +77,23 @@ function vectorDetailTextItems(item) {
   return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))].slice(0, 5);
 }
 
+function vectorDetailTextContent(item) {
+  return vectorDetailTextItems(item).join('\n\n');
+}
+
+function safeTextFilename(item) {
+  const name = vectorCollectionName(item).replace(/[^a-z0-9._-]+/gi, '_').replace(/^_+|_+$/g, '');
+  return `${name || 'collection-knowledge'}.txt`;
+}
+
+function textFallbackFile(item) {
+  return {
+    blob: new Blob([vectorDetailTextContent(item)], { type: 'text/plain;charset=utf-8' }),
+    contentType: 'text/plain;charset=utf-8',
+    filename: safeTextFilename(item),
+  };
+}
+
 function collectionFileStatus(item) {
   const files = vectorMetadataFiles(item);
   if (files.length) return { label: 'File tersimpan', type: 'success', rank: 2 };
@@ -219,7 +236,8 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
   }
 
   async function viewFile(item) {
-    if (!item?.uuid) return;
+    const hasTextFallback = Boolean(vectorDetailTextContent(item));
+    if (!item?.uuid && !hasTextFallback) return;
     let previewWindow;
 
     try {
@@ -235,33 +253,46 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
     setStatus('Membuka file di tab baru...');
 
     try {
-      const file = await api.vectorCollectionFile(item.uuid);
+      const file = item.uuid ? await api.vectorCollectionFile(item.uuid) : textFallbackFile(item);
       openFilePreview(file, previewWindow);
       setStatusType('success');
       setStatus(`File dibuka di tab baru: ${vectorCollectionName(item)}.`);
     } catch (error) {
-      previewWindow?.close();
-      setStatusType('error');
-      setStatus(error.message || 'Gagal membuka file collection.');
+      if (hasTextFallback) {
+        openFilePreview(textFallbackFile(item), previewWindow);
+        setStatusType('success');
+        setStatus(`File asli belum tersedia dari endpoint download. Preview TXT dibuat dari isi knowledge: ${vectorCollectionName(item)}.`);
+      } else {
+        previewWindow?.close();
+        setStatusType('error');
+        setStatus(error.message || 'Gagal membuka file collection.');
+      }
     } finally {
       setFileAction('');
     }
   }
 
   async function downloadSelectedFile(item) {
-    if (!item?.uuid) return;
+    const hasTextFallback = Boolean(vectorDetailTextContent(item));
+    if (!item?.uuid && !hasTextFallback) return;
     setFileAction(`download-${item.uuid}`);
     setStatusType('neutral');
     setStatus('Menyiapkan download file...');
 
     try {
-      const file = await api.vectorCollectionFile(item.uuid);
+      const file = item.uuid ? await api.vectorCollectionFile(item.uuid) : textFallbackFile(item);
       downloadFile({ ...file, fallbackName: vectorCollectionFileLabel(item) || vectorCollectionName(item) || item.uuid });
       setStatusType('success');
       setStatus(`File didownload: ${vectorCollectionName(item)}.`);
     } catch (error) {
-      setStatusType('error');
-      setStatus(error.message || 'Gagal download file collection.');
+      if (hasTextFallback) {
+        downloadFile(textFallbackFile(item));
+        setStatusType('success');
+        setStatus(`File asli belum tersedia dari endpoint download. TXT dibuat dari isi knowledge: ${vectorCollectionName(item)}.`);
+      } else {
+        setStatusType('error');
+        setStatus(error.message || 'Gagal download file collection.');
+      }
     } finally {
       setFileAction('');
     }
@@ -397,9 +428,12 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
         (() => {
           const selectedFiles = vectorMetadataFiles(selectedFile);
           const hasOriginalFile = selectedFiles.length > 0;
-          const canRequestOriginalFile = Boolean(selectedFile.uuid);
           const indexFailure = getVectorIndexFailure(vectorCollectionName(selectedFile));
           const detailTexts = vectorDetailTextItems(selectedFile);
+          const hasTextFallback = detailTexts.length > 0;
+          const useTextFallbackLabel = !hasOriginalFile && hasTextFallback;
+          const canOpenKnowledge = Boolean(selectedFile.uuid || hasTextFallback);
+          const uploadedLabel = formatCollectionTime(selectedFile);
           return (
         <aside className="drawer-backdrop">
           <section className="detail-drawer collection-file-drawer">
@@ -413,9 +447,9 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
 
             <dl className="detail-list">
               <div><dt>Collection</dt><dd>{vectorCollectionName(selectedFile)}</dd></div>
-              <div><dt>Isi knowledge</dt><dd>{vectorCollectionFileLabel(selectedFile) || 'Metadata file kosong'}</dd></div>
-              <div><dt>Status</dt><dd>{selectedFile.uuid ? 'Tersimpan' : 'Belum tersimpan'}</dd></div>
-              <div><dt>Uploaded</dt><dd>{formatCollectionTime(selectedFile)}</dd></div>
+              <div><dt>Isi knowledge</dt><dd>{vectorCollectionFileLabel(selectedFile) || (hasTextFallback ? 'Text knowledge tersedia' : 'Metadata file kosong')}</dd></div>
+              <div><dt>Status</dt><dd>{hasOriginalFile ? 'File asli tersimpan' : hasTextFallback ? 'Text chunks tersedia' : selectedFile.uuid ? 'Metadata kosong' : 'Belum tersimpan'}</dd></div>
+              {uploadedLabel !== '-' && <div><dt>Uploaded</dt><dd>{uploadedLabel}</dd></div>}
               <div><dt>UUID</dt><dd>{selectedFile.uuid || '-'}</dd></div>
             </dl>
 
@@ -428,16 +462,19 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
             )}
 
             {detailTexts.length > 0 && (
-              <div className="collection-file-metadata-list text-preview-list">
-                {detailTexts.map((entry, index) => (
-                  <span key={`${selectedFile.uuid || vectorCollectionName(selectedFile)}-text-${index}`}>{entry}</span>
-                ))}
+              <div className="text-preview-section">
+                <p>Preview isi knowledge</p>
+                <div className="collection-file-metadata-list text-preview-list">
+                  {detailTexts.map((entry, index) => (
+                    <span key={`${selectedFile.uuid || vectorCollectionName(selectedFile)}-text-${index}`}>{entry}</span>
+                  ))}
+                </div>
               </div>
             )}
 
             <div className="hint-box collection-file-hint">
               <ExternalLink size={16} />
-              <span>{hasOriginalFile ? 'File asli hanya dibuka setelah tombol Open File ditekan.' : 'Metadata file belum tersedia dari API list/detail. Open atau Download tetap akan mencoba endpoint file berdasarkan UUID.'}</span>
+              <span>{hasOriginalFile ? 'File asli hanya dibuka setelah tombol Open File ditekan.' : hasTextFallback ? 'File asli belum tersedia dari metadata. Open atau Download akan mencoba endpoint file, lalu fallback ke TXT dari isi knowledge.' : 'Metadata file belum tersedia dari API list/detail. Open atau Download tetap akan mencoba endpoint file berdasarkan UUID.'}</span>
             </div>
 
             {indexFailure && (
@@ -452,13 +489,13 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
                 <Trash2 size={16} />
                 {fileAction === `delete-${selectedFile.uuid}` ? 'Deleting...' : 'Delete'}
               </button>
-              <button type="button" className="secondary-button" onClick={() => downloadSelectedFile(selectedFile)} disabled={Boolean(fileAction) || !canRequestOriginalFile}>
+              <button type="button" className="secondary-button" onClick={() => downloadSelectedFile(selectedFile)} disabled={Boolean(fileAction) || !canOpenKnowledge}>
                 <Download size={16} />
-                {fileAction === `download-${selectedFile.uuid}` ? 'Downloading...' : 'Download'}
+                {fileAction === `download-${selectedFile.uuid}` ? 'Downloading...' : useTextFallbackLabel ? 'Download TXT' : 'Download'}
               </button>
-              <button type="button" className="primary-button" onClick={() => viewFile(selectedFile)} disabled={Boolean(fileAction) || !canRequestOriginalFile}>
+              <button type="button" className="primary-button" onClick={() => viewFile(selectedFile)} disabled={Boolean(fileAction) || !canOpenKnowledge}>
                 <ExternalLink size={16} />
-                {fileAction === `view-${selectedFile.uuid}` ? 'Opening...' : 'Open File'}
+                {fileAction === `view-${selectedFile.uuid}` ? 'Opening...' : useTextFallbackLabel ? 'Open TXT' : 'Open File'}
               </button>
             </div>
           </section>
