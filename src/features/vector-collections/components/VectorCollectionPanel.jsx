@@ -4,7 +4,10 @@ import { Check, ChevronDown, FileUp, Search, Send, X } from 'lucide-react';
 import { api } from '../../../api/client';
 
 const selectedCollectionStorageKey = 'intent-agent-vector-collection';
+const textDraftStorageKey = 'intent-agent-vector-text-draft';
 const maxTextCharacters = 50000;
+const maxPdfSizeBytes = 20 * 1024 * 1024;
+const maxPdfSizeLabel = '20 MB';
 
 function loadSelectedCollection() {
   try {
@@ -26,17 +29,24 @@ function saveSelectedCollection(collectionName) {
   }
 }
 
-async function readWebhookResponse(response) {
-  const contentType = response.headers.get('content-type') || '';
-  const payload = contentType.includes('application/json') ? await response.json() : await response.text();
-
-  if (!response.ok) {
-    const message = typeof payload === 'string' ? payload : payload?.error || payload?.message || JSON.stringify(payload);
-    throw new Error(message || response.statusText);
+function loadTextDraft() {
+  try {
+    return globalThis.sessionStorage?.getItem(textDraftStorageKey) || '';
+  } catch {
+    return '';
   }
+}
 
-  if (typeof payload === 'string') return payload || 'Request berhasil.';
-  return payload?.message || payload?.status || JSON.stringify(payload, null, 2);
+function saveTextDraft(value) {
+  try {
+    if (value) {
+      globalThis.sessionStorage?.setItem(textDraftStorageKey, value);
+    } else {
+      globalThis.sessionStorage?.removeItem(textDraftStorageKey);
+    }
+  } catch {
+    // Draft persistence is best-effort; the form remains usable without storage.
+  }
 }
 
 const modeMeta = {
@@ -75,7 +85,7 @@ export function VectorCollectionPanel({ semanticCollections = [], vectorCollecti
   const [collectionName, setCollectionName] = useState(loadSelectedCollection);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [collectionQuery, setCollectionQuery] = useState('');
-  const [text, setText] = useState('');
+  const [text, setText] = useState(loadTextDraft);
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [activeMode, setActiveMode] = useState('text');
@@ -116,6 +126,10 @@ export function VectorCollectionPanel({ semanticCollections = [], vectorCollecti
   useEffect(() => {
     saveSelectedCollection(collectionName);
   }, [collectionName]);
+
+  useEffect(() => {
+    saveTextDraft(text);
+  }, [text]);
 
   function setError(message) {
     setStatusType('error');
@@ -238,12 +252,8 @@ export function VectorCollectionPanel({ semanticCollections = [], vectorCollecti
     }
 
     runUpload('text', createTextFile(cleanText), async () => {
-      const response = await fetch('/vector-webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'text', text: cleanText, collection_name: collectionName }),
-      });
-      return readWebhookResponse(response);
+      const payload = await api.indexVectorKnowledge({ type: 'text', text: cleanText, collection_name: collectionName });
+      return payload?.message || payload?.status || JSON.stringify(payload, null, 2);
     });
   }
 
@@ -260,15 +270,14 @@ export function VectorCollectionPanel({ semanticCollections = [], vectorCollecti
       formData.append('collection_name', collectionName);
       formData.append('file', file);
 
-      const response = await fetch('/vector-webhook', { method: 'POST', body: formData });
-      return readWebhookResponse(response);
+      const payload = await api.indexVectorKnowledgeFile(formData);
+      return typeof payload === 'string' ? payload : payload?.message || payload?.status || JSON.stringify(payload, null, 2);
     });
   }
 
   function selectPdfFile(selectedFile) {
     if (!selectedFile) return;
     const isPdf = selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf');
-    const maxSize = 10 * 1024 * 1024;
 
     if (!isPdf) {
       setFile(null);
@@ -277,10 +286,10 @@ export function VectorCollectionPanel({ semanticCollections = [], vectorCollecti
       return;
     }
 
-    if (selectedFile.size > maxSize) {
+    if (selectedFile.size > maxPdfSizeBytes) {
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setError('Ukuran PDF maksimal 10 MB.');
+      setError(`Ukuran PDF maksimal ${maxPdfSizeLabel}.`);
       return;
     }
 
@@ -404,7 +413,7 @@ export function VectorCollectionPanel({ semanticCollections = [], vectorCollecti
                 <div className="vector-form-heading">
                   <h2>{activeMeta.title}</h2>
                 </div>
-                <div className="vector-limit-note">Maksimal 10 MB dan 50 halaman.</div>
+                <div className="vector-limit-note">Maksimal {maxPdfSizeLabel} dan 50 halaman.</div>
                 <div
                   className={dragActive ? 'pdf-dropzone active' : 'pdf-dropzone'}
                   onDragEnter={(event) => {

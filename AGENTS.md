@@ -13,7 +13,7 @@ This repository contains a React/Vite dashboard for configuring an AI chatbot sy
 - `src/utils/resourceUtils.jsx` contains resource labels, payload preparation, validation, and table value rendering.
 - `src/api/client.js` contains the API endpoint map and request helpers. Update this file first when Swagger changes.
 - `src/styles.css` contains the dashboard layout and component styling.
-- `vite.config.js` proxies frontend `/api/*` requests to the active Swagger API target, `/chat-webhook` to the n8n chat webhook, and `/vector-webhook` to the n8n VectorDB workflow.
+- `vite.config.js` proxies frontend `/api/*` requests to the active Swagger API target, `/chat-webhook` to the AIWO chat service, and `/vector-webhook` to the local Go Vector Knowledge backend.
 - `server-setup/` contains internal production deployment notes, a Node static/proxy server, and an optional Nginx config. Keep deployment-specific docs there.
 - `docs/UI_UX_PLAN.md` tracks implemented UI/UX improvements and remaining optional polish.
 - Keep future Markdown documentation in `docs/`; leave only `AGENTS.md` at the repository root.
@@ -66,7 +66,7 @@ Vector Collections migration decision:
 - Swagger `/api/vector-collections` is used to read/list/inspect collections and to create a native vector collection row when a selected Semantic Search collection does not yet exist there.
 - Swagger `GET /api/vector-collections/{uuid}` is used to view/download the original uploaded file stored from `cmetadata`.
 - Swagger `POST /api/vector-collections/{uuid}/upload` is used to upload the original TXT/PDF file so knowledge can be viewed as a coherent file, not only as vector chunks.
-- The n8n `/vector-webhook` upload still runs after the Swagger upload so the existing chunking/vector indexing workflow and AI search behavior remain intact.
+- The Go backend `/vector-webhook` upload still runs after the Swagger upload so chunking/vector indexing workflow and AI search behavior remain intact without n8n.
 - Keep Semantic Search as the Action target registry because `action.semantic_search_id` still exists in the new ERD/Swagger.
 
 AI Chat remains separate from Swagger CRUD. It sends messages to n8n through `/chat-webhook` with `chatInput`, `message`, and `sessionId`. The n8n workflow decides collection routing from prompt/chat logic.
@@ -95,7 +95,7 @@ The web app currently implements these ERD modules:
 - Users: admin-only list, detail-on-edit, create, update, assign role, delete with role and usecase assignment fields.
 - External Data: list, detail-on-edit, create, update, delete.
 - Semantic Search: list, detail-on-edit, create, update, delete.
-- Vector Collections: read/list Swagger vector collections for inspection, choose an existing Semantic Search collection, then `POST` text or `POST` PDF to n8n via `/vector-webhook`. Create collection names from the Semantic Search page.
+- Vector Collections: read/list Swagger vector collections for inspection, choose an existing Semantic Search collection, then `POST` text or `POST` PDF to the Go backend via `/vector-webhook`. Create collection names from the Semantic Search page.
 - Utilities: list and create only, matching Swagger.
 - Agent Utilities: create only, matching Swagger.
 - `n8n_vector_collections` and `n8n_vectors`: managed by the Vector Collections page through n8n PGVector until direct read endpoints exist.
@@ -124,8 +124,8 @@ Fully utilized Swagger endpoints:
 
 Additional non-Swagger endpoint used by the UI:
 
-- `/chat-webhook`: `POST`, proxied to public n8n `http://103.140.90.131:5678/webhook/eb70bb74-2714-4d79-b447-de3e7cd683cb/chat`.
-- `/vector-webhook`: `POST` and `PUT`, proxied to public n8n `http://103.140.90.131:5678/webhook/update-intent`. UI exposes only `POST` text JSON and PDF multipart upload; `PUT` sync remains a documented n8n endpoint but is hidden from UI because it can duplicate Intent/Action vectors. Do not run write smoke tests without a cleanup path because POST inserts rows into PGVector.
+- `/chat-webhook`: `POST`, proxied to AIWO engine `http://194.233.79.180:8081/api/v1/chat`.
+- `/vector-webhook`: `POST` and `PUT`, proxied to the local Go Vector Knowledge backend `http://127.0.0.1:8082/webhook/update-intent`. UI exposes only `POST` text JSON and PDF multipart upload; `PUT` sync remains backend-compatible but is hidden from UI because it can duplicate Intent/Action vectors. Do not run write smoke tests without a cleanup path because POST inserts rows into PGVector.
 
 Endpoints not present in Swagger / not available:
 
@@ -134,7 +134,7 @@ Endpoints not present in Swagger / not available:
 - Any CRUD endpoints for `n8n_vector_collections`.
 - Any CRUD endpoints for `n8n_vectors`.
 
-Migration caveat: the new Swagger at `194.233.79.180:8080` exposes `/api/vector-collections` for read/list/inspect, native collection creation, original file upload, and file view/download. Text/PDF knowledge upload still also posts to public n8n `/vector-webhook` for vector indexing.
+Migration caveat: the new Swagger at `194.233.79.180:8080` exposes `/api/vector-collections` for read/list/inspect, native collection creation, original file upload, and file view/download. Text/PDF knowledge upload also posts to Go backend `/vector-webhook` for vector indexing.
 
 Do not add fake client-side data for unavailable endpoints. Disable unsupported actions and show a clear unavailable state.
 
@@ -205,8 +205,6 @@ For API-related changes, verify Swagger live again and update `docs/API_ACCESS_S
 Keep `.env` out of git. During local development, leave `VITE_API_BASE_URL` empty so the app uses the Vite proxy. If deploying without Vite proxy, set `VITE_API_BASE_URL` to the real API base URL and handle CORS on the server.
 
 For internal production, prefer `npm run build` plus `npm start` or the Nginx config in `server-setup/`. Keep `VITE_API_BASE_URL=` empty in production when using the provided proxy server so browser requests stay relative to the app host.
-
-
 
 
 

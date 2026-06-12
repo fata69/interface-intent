@@ -1,6 +1,6 @@
 ﻿# Intent & Agent Management Console
 
-React/Vite dashboard for configuring AI chatbot resources from the active ERD and Swagger API. The repository contains only the frontend, with no local backend and no mock data.
+React/Vite dashboard for configuring AI chatbot resources from the active ERD and Swagger API. The repository also contains a local Go Vector Knowledge backend that replaces the old n8n vector indexing workflow. There is no mock data.
 
 ## Active Runtime
 
@@ -9,7 +9,7 @@ React/Vite dashboard for configuring AI chatbot resources from the active ERD an
 - Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
 - REST API backend: `http://194.233.79.180:8080`
 - AIWO engine/chat/cache: `http://194.233.79.180:8081`
-- n8n host: `http://103.140.90.131:5678`
+- Vector Knowledge backend: `http://127.0.0.1:8082`
 - ERD source: `ERD.mmd` and `ERD_VIEW.html` in the repository root
 
 ## Stack
@@ -41,11 +41,11 @@ Browser
 
 Browser
   -> /vector-webhook via proxy
-  -> http://103.140.90.131:5678/webhook/update-intent
-  -> Existing n8n VectorDB workflow
+  -> http://127.0.0.1:8082/webhook/update-intent
+  -> Go Vector Knowledge backend
 ```
 
-This repository does not contain backend controllers, database migrations, ORM models, PostgreSQL connection code, or fake local fixtures.
+This repository does not contain fake local fixtures.
 
 ## Frontend Structure
 
@@ -134,7 +134,7 @@ App URL:           http://172.16.210.244:5173/
 REST API proxy:    /api -> http://194.233.79.180:8080
 AIWO chat:         /chat-webhook -> http://194.233.79.180:8081/api/v1/chat
 Intent sync:       /intent-sync -> http://194.233.79.180:8081/api/v1/update
-Vector webhook:    /vector-webhook -> http://103.140.90.131:5678/webhook/update-intent
+Vector webhook:    /vector-webhook -> http://127.0.0.1:8082/webhook/update-intent
 ```
 
 Detailed server notes live in `server-setup/README.md`.
@@ -172,7 +172,7 @@ Semantic Search and native Vector Collections intentionally work together:
 1. Semantic Search stores the Action-facing `collection_name` registry.
 2. Upload Knowledge uses that name to find or create a native `/api/vector-collections` row.
 3. The app uploads the original TXT/PDF to `/api/vector-collections/{uuid}/upload`.
-4. The app posts the same content to `/vector-webhook` so n8n performs chunking/vector indexing.
+4. The app posts the same content to `/vector-webhook` so the Go backend performs chunking/vector indexing.
 5. Collection Files lists saved native Vector Collection rows, opens a detail drawer before any original file is opened, and keeps Download as a separate explicit action.
 
 `semantic_search.collection_name` and `n8n_vector_collections.name` have no FK in the ERD. The UI keeps them aligned by using the same name.

@@ -25,7 +25,7 @@ export default defineConfig({
         rewrite: () => '/api/v1/update',
       },
       '/vector-webhook': {
-        target: 'http://103.140.90.131:5678',
+        target: 'http://127.0.0.1:8082',
         changeOrigin: true,
         rewrite: () => '/webhook/update-intent',
       },

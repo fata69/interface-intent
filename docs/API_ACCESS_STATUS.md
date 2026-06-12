@@ -18,7 +18,7 @@ Frontend memakai relative path dan proxy, bukan direct browser call ke backend:
 /api/*          -> http://194.233.79.180:8080/api/*
 /chat-webhook   -> http://194.233.79.180:8081/api/v1/chat
 /intent-sync    -> http://194.233.79.180:8081/api/v1/update
-/vector-webhook -> http://103.140.90.131:5678/webhook/update-intent
+/vector-webhook -> http://127.0.0.1:8082/webhook/update-intent
 ```
 
 Saat development dan production proxy, biarkan `VITE_API_BASE_URL=` kosong.
@@ -82,8 +82,8 @@ Runtime slash behavior has previously differed from Swagger for `roles`, `usecas
 | --- | --- | --- | --- |
 | `POST` | `/chat-webhook` | AIWO chat service | Exposed by AI Chat |
 | `POST` | `/intent-sync` | AIWO intent cache reload | Exposed by Intents sync button |
-| `POST` | `/vector-webhook` | n8n VectorDB workflow | Exposed by Vector Collections > Upload Knowledge for text/PDF indexing |
-| `PUT` | `/vector-webhook` | n8n VectorDB workflow | Documented only; hidden from UI to avoid duplicate vector rows |
+| `POST` | `/vector-webhook` | Go Vector Knowledge backend | Exposed by Vector Collections > Upload Knowledge for text/PDF indexing |
+| `PUT` | `/vector-webhook` | Go Vector Knowledge backend | Backend-compatible sync path; hidden from UI to avoid duplicate vector rows |
 
 Do not run write smoke tests against `/vector-webhook` without a cleanup path. If a test write is unavoidable, use `docs/VECTOR_TEST_CLEANUP.md` as the cleanup reference.
 

@@ -1,0 +1,12 @@
+# Environment files (berisi API key dan DB credentials)
+.env
+
+# Go build output
+/bin/
+/tmp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

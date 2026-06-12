@@ -180,6 +180,11 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(payload),
   }),
+  indexVectorKnowledge: (payload) => requestContent('/vector-webhook', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  indexVectorKnowledgeFile: (formData) => requestFormData('/vector-webhook', formData),
   assignUserRole: (id, roleId) => request(withId(endpoints.users.path, `${id}/role`), {
     method: 'PUT',
     body: JSON.stringify({ role_id: Number(roleId) }),

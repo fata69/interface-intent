@@ -25,7 +25,7 @@ loadEnvFile('.env.production');
 const host = process.env.HOST || '0.0.0.0';
 const port = Number(process.env.PORT || 5173);
 const apiTarget = process.env.API_TARGET || 'http://194.233.79.180:8080';
-const n8nTarget = process.env.N8N_TARGET || 'http://103.140.90.131:5678';
+const vectorBackendTarget = process.env.VECTOR_BACKEND_TARGET || 'http://127.0.0.1:8082';
 const aiwoEngineTarget = process.env.AIWO_ENGINE_TARGET || 'http://194.233.79.180:8081';
 const chatWebhookPath = process.env.CHAT_WEBHOOK_PATH || '/api/v1/chat';
 const intentSyncPath = process.env.INTENT_SYNC_PATH || '/api/v1/update';
@@ -155,7 +155,7 @@ const server = createServer((req, res) => {
   }
 
   if (req.url?.startsWith('/vector-webhook')) {
-    proxy(req, res, n8nTarget, vectorWebhookPath);
+    proxy(req, res, vectorBackendTarget, vectorWebhookPath);
     return;
   }
 
@@ -167,5 +167,5 @@ server.listen(port, host, () => {
   console.log(`Proxy /api -> ${apiTarget}`);
   console.log(`Proxy /chat-webhook -> ${aiwoEngineTarget}${chatWebhookPath}`);
   console.log(`Proxy /intent-sync -> ${aiwoEngineTarget}${intentSyncPath}`);
-  console.log(`Proxy /vector-webhook -> ${n8nTarget}${vectorWebhookPath}`);
+  console.log(`Proxy /vector-webhook -> ${vectorBackendTarget}${vectorWebhookPath}`);
 });

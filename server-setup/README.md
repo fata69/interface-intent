@@ -6,7 +6,7 @@ Panduan ini untuk menjalankan Intent & Agent Management Console di server intern
 litmas@172.16.210.244
 ```
 
-Aplikasi tetap frontend React. `server-setup/prod-server.mjs` hanya serve static `dist` dan reverse proxy ke REST API, AIWO engine, serta n8n VectorDB.
+Aplikasi tetap frontend React. `server-setup/prod-server.mjs` hanya serve static `dist` dan reverse proxy ke REST API, AIWO engine, serta backend Go Vector Knowledge.
 
 ## Runtime Target
 
@@ -14,7 +14,7 @@ Aplikasi tetap frontend React. `server-setup/prod-server.mjs` hanya serve static
 - Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
 - API target: `http://194.233.79.180:8080`
 - AIWO engine target: `http://194.233.79.180:8081`
-- n8n target: `http://103.140.90.131:5678`
+- Vector Knowledge backend target: `http://127.0.0.1:8082`
 - PM2 process name: `interface-intent`
 - Server project folder: `~/interface-intent/interface-intent-migrate`
 - Project Node version: `.nvmrc` -> Node `22`
@@ -145,7 +145,7 @@ HOST=0.0.0.0
 PORT=5173
 API_TARGET=http://194.233.79.180:8080
 AIWO_ENGINE_TARGET=http://194.233.79.180:8081
-N8N_TARGET=http://103.140.90.131:5678
+VECTOR_BACKEND_TARGET=http://127.0.0.1:8082
 CHAT_WEBHOOK_PATH=/api/v1/chat
 INTENT_SYNC_PATH=/api/v1/update
 VECTOR_WEBHOOK_PATH=/webhook/update-intent
