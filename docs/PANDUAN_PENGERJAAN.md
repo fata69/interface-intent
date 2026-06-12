@@ -128,7 +128,7 @@ Label isi knowledge di Collection Knowledge dibaca dari `cmetadata` secara defen
 
 Di ERD tidak ada FK antara `semantic_search` dan `n8n_vector_collections`. Hubungannya logical by name: `semantic_search.collection_name` harus sama dengan `n8n_vector_collections.name`.
 
-Delete Semantic Search hanya menghapus registry Swagger/API, bukan isi PGVector. Replace isi knowledge terjadi saat upload ulang ke `collection_name` yang sama melalui backend Go.
+Delete Semantic Search dari dashboard akan mencoba menghapus native Vector Collection yang namanya sama lebih dulu melalui `DELETE /api/vector-collections/{uuid}`, lalu menghapus registry Semantic Search. Replace isi knowledge tetap terjadi saat upload ulang ke `collection_name` yang sama melalui backend Go.
 
 Aksi Go Vector Knowledge backend yang tersedia:
 

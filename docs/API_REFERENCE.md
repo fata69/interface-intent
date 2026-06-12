@@ -298,7 +298,7 @@ Current UI flow:
 
 `cmetadata` parsing is defensive in the frontend. Supported display formats include plain path strings, JSON objects, and JSON arrays. File preview/download uses `GET /api/vector-collections/{uuid}/download`.
 
-ERD note: `semantic_search.collection_name` and `n8n_vector_collections.name` are not connected by FK. UI keeps them aligned by name.
+ERD note: `semantic_search.collection_name` and `n8n_vector_collections.name` are not connected by FK. UI keeps them aligned by name. When deleting a Semantic Search row, the frontend first deletes the matching native vector collection by name through `DELETE /api/vector-collections/{uuid}` when that native row exists, then deletes the Semantic Search registry row.
 
 ## AI Chat Webhook
 

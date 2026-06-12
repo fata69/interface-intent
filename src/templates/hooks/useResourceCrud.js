@@ -69,6 +69,20 @@ function userUpdatePayload(payload, { includeRole = true } = {}) {
   return next;
 }
 
+function normalizeCollectionName(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function vectorCollectionName(item) {
+  return item?.name || item?.collection_name || '';
+}
+
+function findMatchingVectorCollection(semanticRow, data) {
+  const semanticName = normalizeCollectionName(semanticRow?.collection_name);
+  if (!semanticName) return null;
+  return (data.vectorCollections || []).find((item) => normalizeCollectionName(vectorCollectionName(item)) === semanticName) || null;
+}
+
 export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
   const config = modules[resource];
   const [query, setQuery] = useState('');
@@ -247,10 +261,13 @@ export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
   function deleteRow(row) {
     if (!capabilities.canRemove) return;
     setErrors([]);
+    const matchingVectorCollection = resource === 'semanticSearches' ? findMatchingVectorCollection(row, data) : null;
     setConfirmation({
       row,
       title: `Delete ${config.singular}`,
-      message: `Hapus ${config.singular} #${row.id}? Data yang sudah dihapus tidak bisa dikembalikan dari dashboard ini.`,
+      message: matchingVectorCollection?.uuid
+        ? `Hapus ${config.singular} #${row.id} dan knowledge collection "${row.collection_name}"? File/vector collection native ikut dihapus.`
+        : `Hapus ${config.singular} #${row.id}? Data yang sudah dihapus tidak bisa dikembalikan dari dashboard ini.`,
       confirmLabel: 'Delete',
       busy: false,
     });
@@ -260,9 +277,15 @@ export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
     if (!confirmation?.row) return;
     setConfirmation((current) => ({ ...current, busy: true }));
     try {
+      if (resource === 'semanticSearches') {
+        const matchingVectorCollection = findMatchingVectorCollection(confirmation.row, data);
+        if (matchingVectorCollection?.uuid) {
+          await api.deleteVectorCollection(matchingVectorCollection.uuid);
+        }
+      }
       await api.remove(resource, confirmation.row.id);
       await loadData();
-      setApiStatus('Data berhasil dihapus.');
+      setApiStatus(resource === 'semanticSearches' ? 'Semantic Search dan knowledge collection terkait berhasil dihapus.' : 'Data berhasil dihapus.');
       setConfirmation(null);
     } catch (error) {
       setErrors([`Gagal menghapus: ${error.message || 'akses gagal'}.`]);

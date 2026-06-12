@@ -66,7 +66,8 @@ Vector Collections migration decision:
 - Swagger `/api/vector-collections` is used to read/list/inspect collections and to create a native vector collection row when a selected Semantic Search collection does not yet exist there.
 - Swagger `GET /api/vector-collections/{uuid}` is used to inspect the native vector collection row. Swagger `GET /api/vector-collections/{uuid}/download` is used to view/download the original uploaded file stored from `cmetadata`.
 - Swagger `POST /api/vector-collections/{uuid}/upload` is used to upload the original TXT/PDF file so knowledge can be viewed as a coherent file, not only as vector chunks.
-- Swagger `DELETE /api/vector-collections/{uuid}` is used by Collection Knowledge to delete the native vector collection/file row; Semantic Search registry deletion remains separate.
+- Swagger `DELETE /api/vector-collections/{uuid}` is used by Collection Knowledge to delete the native vector collection/file row.
+- When deleting a Semantic Search row from the CRUD page, the frontend deletes the matching native vector collection by name first through `DELETE /api/vector-collections/{uuid}` when it exists, then deletes the Semantic Search registry row. This keeps `semantic_search.collection_name` and `n8n_vector_collections.name` cleanup aligned even though the ERD has no FK.
 - The Go backend `/vector-webhook` upload still runs after the Swagger upload so chunking/vector indexing workflow and AI search behavior remain intact without n8n. Uploading to an existing `collection_name` replaces old rows in `n8n_vectors` for that collection before inserting the latest chunks.
 - Keep Semantic Search as the Action target registry because `action.semantic_search_id` still exists in the new ERD/Swagger.
 
