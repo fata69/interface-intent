@@ -86,7 +86,7 @@ Request API memakai relative path `/api/...` dan diproxy oleh Vite/prod server k
 /vector-webhook -> http://127.0.0.1:8082/webhook/update-intent
 ```
 
-Navigasi dashboard memakai `react-router-dom`. Route utama saat ini adalah `/intents`, `/usecases`, `/actions`, `/external-data`, `/agents`, `/agent-utilities`, `/semantic-search`, `/utilities`, `/vector-collections/upload`, `/vector-collections/files`, `/roles`, `/users`, dan `/chat`. Root `/` redirect ke `/intents`, sedangkan `/vector-collections` redirect ke `/vector-collections/upload`.
+Navigasi dashboard memakai `react-router-dom`. Route utama saat ini adalah `/intents`, `/usecases`, `/actions`, `/external-data`, `/agents`, `/agent-utilities`, `/semantic-search`, `/utilities`, `/vector-collections/upload`, `/vector-collections/files`, `/roles`, `/users`, dan `/chat`. Root `/` redirect ke `/intents`, sedangkan `/vector-collections` redirect ke `/vector-collections/upload`. Route `/vector-collections/files` tampil sebagai Collection Knowledge karena sekarang satu collection punya satu knowledge aktif.
 
 Jangan menambahkan mock data. Jika endpoint belum ada, biarkan capability di `src/api/client.js` bernilai `false` dan tampilkan unavailable state.
 
@@ -122,9 +122,9 @@ Current flow:
 2. Upload Knowledge memastikan native collection row ada di `/api/vector-collections`.
 3. Upload original TXT/PDF ke `/api/vector-collections/{uuid}/upload`.
 4. Kirim konten yang sama ke Go backend `/vector-webhook` untuk chunking/vector indexing. Jika `collection_name` sudah punya vector lama, backend Go menghapus row lama di `n8n_vectors` lalu memasukkan chunk terbaru.
-5. Collection Files menampilkan file collection yang tersimpan, membuka drawer detail dulu, lalu memisahkan preview file lewat Open File dari Download yang eksplisit.
+5. Collection Knowledge menampilkan satu isi knowledge aktif per collection, membuka drawer detail dulu, lalu memisahkan preview file lewat Open File dari Download yang eksplisit.
 
-Label file di Collection Files dibaca dari `cmetadata` secara defensif. Format yang ditoleransi: path string biasa, JSON object, dan JSON array.
+Label isi knowledge di Collection Knowledge dibaca dari `cmetadata` secara defensif. Format yang ditoleransi: path string biasa, JSON object, dan JSON array.
 
 Di ERD tidak ada FK antara `semantic_search` dan `n8n_vector_collections`. Hubungannya logical by name: `semantic_search.collection_name` harus sama dengan `n8n_vector_collections.name`.
 

@@ -95,7 +95,7 @@ These operations are still not available as complete CRUD in Swagger/API and sho
 - Detail, update, and delete endpoints for Utilities.
 - Direct CRUD for `n8n_vectors`.
 
-Vector collection read/list/file upload is available through `/api/vector-collections`. Collection Files shows saved files in a paginated sortable table, displays upload time when the backend provides a timestamp, opens a frontend detail drawer before the original file is opened, and separates preview from explicit download. Vector chunk rows remain managed by the Go backend and PGVector rather than a frontend CRUD page.
+Vector collection read/list/file upload is available through `/api/vector-collections`. Collection Knowledge shows one active knowledge entry per collection in a paginated sortable table, displays upload time when the backend provides a timestamp, opens a frontend detail drawer before the original file is opened, and separates preview from explicit download. Vector chunk rows remain managed by the Go backend and PGVector rather than a frontend CRUD page.
 
 ## Frontend Behavior Notes
 

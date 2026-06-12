@@ -19,10 +19,10 @@ export const vectorKnowledgeUploadPage = {
 };
 
 export const vectorCollectionFilesPage = {
-  title: 'Collection Files',
-  singular: 'Collection File',
+  title: 'Collection Knowledge',
+  singular: 'Collection Knowledge',
   icon: FileSearch,
-  description: 'Lihat file knowledge yang sudah tersimpan per collection.',
+  description: 'Lihat isi knowledge aktif yang tersimpan per collection.',
   fields: [],
   columns: [],
 };

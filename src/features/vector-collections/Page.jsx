@@ -161,6 +161,11 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
 
   async function viewFile(item) {
     if (!item?.uuid) return;
+    if (!vectorMetadataFiles(item).length) {
+      setStatusType('error');
+      setStatus(`File asli untuk ${vectorCollectionName(item)} belum tersimpan. Upload ulang knowledge ke collection ini supaya bisa dibuka.`);
+      return;
+    }
     setFileAction(`view-${item.uuid}`);
     setStatusType('neutral');
     setStatus('Membuka file di tab baru...');
@@ -180,6 +185,11 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
 
   async function downloadSelectedFile(item) {
     if (!item?.uuid) return;
+    if (!vectorMetadataFiles(item).length) {
+      setStatusType('error');
+      setStatus(`File asli untuk ${vectorCollectionName(item)} belum tersimpan. Upload ulang knowledge ke collection ini supaya bisa didownload.`);
+      return;
+    }
     setFileAction(`download-${item.uuid}`);
     setStatusType('neutral');
     setStatus('Menyiapkan download file...');
@@ -201,17 +211,17 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
     <div className="vector-page">
       <PageHeader
         config={vectorCollectionFilesPage}
-        eyebrow="Knowledge Files"
-        countLabel={`${vectorCollections.length} files`}
+        eyebrow="Collection Knowledge"
+        countLabel={`${vectorCollections.length} collections`}
         onRefresh={loadData}
       />
-      <StatusStrip warning={statusWarning}>{loading ? 'Memuat file collection...' : apiStatus}</StatusStrip>
+      <StatusStrip warning={statusWarning}>{loading ? 'Memuat collection knowledge...' : apiStatus}</StatusStrip>
 
       <section className="data-panel collection-files-panel">
         <div className="panel-toolbar">
           <div className="search-box">
             <Search size={17} />
-            <input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="Cari collection atau file" />
+            <input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="Cari collection atau isi knowledge" />
           </div>
         </div>
 
@@ -220,9 +230,9 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
             <thead>
               <tr>
                 <th className="col-row-number">No</th>
-                <th className="col-file"><SortHeader column="file" label="File" /></th>
-                <th className="col-uploaded_at"><SortHeader column="uploaded_at" label="Uploaded" /></th>
                 <th className="col-collection"><SortHeader column="collection" label="Collection" /></th>
+                <th className="col-file"><SortHeader column="file" label="Isi Knowledge" /></th>
+                <th className="col-uploaded_at"><SortHeader column="uploaded_at" label="Uploaded" /></th>
                 <th className="actions-col">Actions</th>
               </tr>
             </thead>
@@ -234,9 +244,9 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
                 return (
                   <tr key={item.uuid || name} className="clickable-row" onClick={() => setSelectedFile(item)}>
                     <td className="cell-row-number">{startIndex + index + 1}</td>
-                    <td className="cell-file" title={files.map((entry) => entry.label).join(', ') || name}>{files.length > 1 ? `${files.length} file tersimpan` : fileLabel || 'File collection tersimpan'}</td>
-                    <td className="cell-uploaded_at">{formatCollectionTime(item)}</td>
                     <td className="cell-collection"><strong title={name}>{name}</strong></td>
+                    <td className="cell-file" title={files.map((entry) => entry.label).join(', ') || 'Upload ulang untuk menyimpan file asli'}>{files.length > 1 ? `${files.length} file tersimpan` : fileLabel || 'File asli belum tersimpan'}</td>
+                    <td className="cell-uploaded_at">{formatCollectionTime(item)}</td>
                     <td className="row-actions" onClick={(event) => event.stopPropagation()}>
                       <button className="secondary-button" type="button" onClick={() => setSelectedFile(item)} disabled={loading || !item.uuid}>Detail</button>
                     </td>
@@ -247,7 +257,7 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
                 <tr>
                   <td colSpan="5" className="empty-state">
                     <Boxes size={28} />
-                    {vectorCollections.length ? 'Tidak ada data untuk filter ini.' : 'Belum ada file knowledge tersimpan.'}
+                    {vectorCollections.length ? 'Tidak ada data untuk filter ini.' : 'Belum ada knowledge collection tersimpan.'}
                   </td>
                 </tr>
               )}
@@ -288,31 +298,35 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
           </div>
         </div>
 
-        <div className={`vector-status ${statusType}`}>{status || `${sortedCollections.length} file collection ditampilkan.`}</div>
+        <div className={`vector-status ${statusType}`}>{status || `${sortedCollections.length} collection knowledge ditampilkan.`}</div>
       </section>
 
       {selectedFile && (
+        (() => {
+          const selectedFiles = vectorMetadataFiles(selectedFile);
+          const hasOriginalFile = selectedFiles.length > 0;
+          return (
         <aside className="drawer-backdrop">
           <section className="detail-drawer collection-file-drawer">
             <div className="drawer-header">
               <div>
-                <p className="eyebrow">Collection File</p>
+                <p className="eyebrow">Collection Knowledge</p>
                 <h2>{vectorCollectionName(selectedFile)}</h2>
               </div>
               <button type="button" className="ghost-button" onClick={() => setSelectedFile(null)}><X size={18} /></button>
             </div>
 
             <dl className="detail-list">
-              <div><dt>Status file</dt><dd>{selectedFile.uuid ? 'Tersimpan' : 'Belum tersimpan'}</dd></div>
-              <div><dt>Nama file</dt><dd>{vectorCollectionFileLabel(selectedFile) || 'File collection tersimpan'}</dd></div>
               <div><dt>Collection</dt><dd>{vectorCollectionName(selectedFile)}</dd></div>
+              <div><dt>Isi knowledge</dt><dd>{vectorCollectionFileLabel(selectedFile) || 'File asli belum tersimpan'}</dd></div>
+              <div><dt>Status</dt><dd>{selectedFile.uuid ? 'Tersimpan' : 'Belum tersimpan'}</dd></div>
               <div><dt>Uploaded</dt><dd>{formatCollectionTime(selectedFile)}</dd></div>
               <div><dt>UUID</dt><dd>{selectedFile.uuid || '-'}</dd></div>
             </dl>
 
-            {vectorMetadataFiles(selectedFile).length > 1 && (
+            {selectedFiles.length > 1 && (
               <div className="collection-file-metadata-list">
-                {vectorMetadataFiles(selectedFile).map((entry) => (
+                {selectedFiles.map((entry) => (
                   <span key={entry.id}>{entry.label}</span>
                 ))}
               </div>
@@ -320,22 +334,24 @@ export function VectorCollectionFilesPage({ data, apiStatus, loading, loadData }
 
             <div className="hint-box collection-file-hint">
               <ExternalLink size={16} />
-              <span>File asli hanya dibuka setelah tombol Open File ditekan.</span>
+              <span>{hasOriginalFile ? 'File asli hanya dibuka setelah tombol Open File ditekan.' : 'File asli belum tersedia. Upload ulang knowledge ke collection ini untuk menyimpan file TXT/PDF yang bisa dibuka atau didownload.'}</span>
             </div>
 
             <div className="drawer-actions">
               <button type="button" className="secondary-button" onClick={() => setSelectedFile(null)}>Tutup</button>
-              <button type="button" className="secondary-button" onClick={() => downloadSelectedFile(selectedFile)} disabled={Boolean(fileAction) || !selectedFile.uuid}>
+              <button type="button" className="secondary-button" onClick={() => downloadSelectedFile(selectedFile)} disabled={Boolean(fileAction) || !selectedFile.uuid || !hasOriginalFile}>
                 <Download size={16} />
                 {fileAction === `download-${selectedFile.uuid}` ? 'Downloading...' : 'Download'}
               </button>
-              <button type="button" className="primary-button" onClick={() => viewFile(selectedFile)} disabled={Boolean(fileAction) || !selectedFile.uuid}>
+              <button type="button" className="primary-button" onClick={() => viewFile(selectedFile)} disabled={Boolean(fileAction) || !selectedFile.uuid || !hasOriginalFile}>
                 <ExternalLink size={16} />
                 {fileAction === `view-${selectedFile.uuid}` ? 'Opening...' : 'Open File'}
               </button>
             </div>
           </section>
         </aside>
+          );
+        })()
       )}
     </div>
   );

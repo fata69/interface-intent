@@ -72,6 +72,8 @@ function normalizeMetadataEntry(entry) {
   const nestedEntry = Array.isArray(nested) ? nested[0] : nested;
   const label = directFileName || baseName(directPath) || nestedEntry?.label || '';
 
+  if (!label && !directPath && !nestedEntry?.path) return null;
+
   return {
     label,
     raw: parsed,
