@@ -1,13 +1,13 @@
 import { FileJson } from 'lucide-react';
 import { labelFor } from '../../utils/resourceUtils.jsx';
 
-export function FormField({ field, value, data, error, autoFocus = false, disabled = false, onChange, onFormat }) {
+export function FormField({ field, value, form = {}, data, error, autoFocus = false, disabled = false, onChange, onFormat }) {
   const wide = field.type === 'textarea' || field.type === 'json' || field.type === 'multiRelation';
   const Wrapper = field.type === 'multiRelation' ? 'div' : 'label';
   return (
     <Wrapper className={`${wide ? 'wide ' : ''}${field.type === 'multiRelation' ? 'form-field' : ''}`}>
       <span>{field.label}</span>
-      <Field field={field} value={value} data={data} autoFocus={autoFocus} disabled={disabled} onChange={onChange} />
+      <Field field={field} value={value} form={form} data={data} autoFocus={autoFocus} disabled={disabled} onChange={onChange} />
       {field.type === 'json' && (
         <div className="field-actions">
           <button type="button" className="text-button" onClick={onFormat} disabled={disabled || Boolean(error)}>
@@ -21,7 +21,24 @@ export function FormField({ field, value, data, error, autoFocus = false, disabl
   );
 }
 
-function Field({ field, value, data, autoFocus, disabled, onChange }) {
+function relationOptions(field, data, form) {
+  const options = data[field.resource] || [];
+  if (field.key !== 'action_id' || field.resource !== 'actions') return options;
+
+  const currentIntentId = String(form.id ?? '');
+  const currentActionId = String(form.action_id ?? '');
+  const usedActionIds = new Set((data.intents || [])
+    .filter((intent) => String(intent.id ?? '') !== currentIntentId)
+    .map((intent) => String(intent.action_id ?? ''))
+    .filter(Boolean));
+
+  return options.filter((item) => {
+    const optionId = String(item.id ?? item.uuid);
+    return optionId === currentActionId || !usedActionIds.has(optionId);
+  });
+}
+
+function Field({ field, value, form, data, autoFocus, disabled, onChange }) {
   if (field.type === 'select') {
     return (
       <select value={value} onChange={(event) => onChange(event.target.value)} autoFocus={autoFocus} disabled={disabled}>
@@ -32,10 +49,11 @@ function Field({ field, value, data, autoFocus, disabled, onChange }) {
   }
 
   if (field.type === 'relation') {
+    const options = relationOptions(field, data, form);
     return (
       <select value={value ?? ''} onChange={(event) => onChange(event.target.value)} autoFocus={autoFocus} disabled={disabled}>
         <option value="">None</option>
-        {(data[field.resource] || []).map((item) => (
+        {options.map((item) => (
           <option key={item.id ?? item.uuid} value={item.id ?? item.uuid}>{labelFor(field.resource, item.id ?? item.uuid, data)}</option>
         ))}
       </select>
