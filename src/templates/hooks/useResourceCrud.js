@@ -83,7 +83,7 @@ function findMatchingVectorCollection(semanticRow, data) {
   return (data.vectorCollections || []).find((item) => normalizeCollectionName(vectorCollectionName(item)) === semanticName) || null;
 }
 
-export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
+export function useResourceCrud({ resource, data, loadData, setApiStatus, validationRows }) {
   const config = modules[resource];
   const [query, setQuery] = useState('');
   const [modal, setModal] = useState(null);
@@ -220,7 +220,7 @@ export function useResourceCrud({ resource, data, loadData, setApiStatus }) {
 
   async function saveForm(event) {
     event.preventDefault();
-    const nextErrors = validateRecord(resource, form, modal.mode, { rows, currentId: modal.id });
+    const nextErrors = validateRecord(resource, form, modal.mode, { rows: validationRows || rows, currentId: modal.id });
     if (nextErrors.length) {
       setErrors(nextErrors);
       return;

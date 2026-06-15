@@ -220,6 +220,16 @@ export function validateRecord(resource, record, mode = 'create', context = {}) 
     if (collectionName && duplicate) errors.push('Collection name sudah dipakai. Gunakan nama lain.');
   }
 
+  if (resource === 'intents') {
+    const actionId = String(record.action_id ?? '').trim();
+    const duplicate = (context.rows || []).find((row) => (
+      actionId
+      && String(row.action_id ?? '') === actionId
+      && String(row.id) !== String(context.currentId ?? record.id ?? '')
+    ));
+    if (duplicate) errors.push(`Action ini sudah dipakai oleh Intent #${duplicate.id}. Pilih Action lain atau edit Intent tersebut.`);
+  }
+
   return errors;
 }
 

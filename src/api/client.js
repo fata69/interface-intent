@@ -39,9 +39,17 @@ async function responseError(response) {
   const text = await response.text().catch(() => fallback);
   if (!text) return fallback;
 
+  if (text.includes('intent_action_id_key') || text.includes('duplicate key value')) {
+    return 'Action ini sudah dipakai oleh Intent lain. Pilih Action lain atau edit Intent yang sudah ada.';
+  }
+
   try {
     const payload = JSON.parse(text);
-    return payload.error || payload.message || fallback;
+    const message = payload.error || payload.message || fallback;
+    if (message.includes('intent_action_id_key') || message.includes('duplicate key value')) {
+      return 'Action ini sudah dipakai oleh Intent lain. Pilih Action lain atau edit Intent yang sudah ada.';
+    }
+    return message;
   } catch {
     return text;
   }
