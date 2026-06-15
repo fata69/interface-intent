@@ -51,7 +51,7 @@ New ERD relations to remember:
 - `semantic_search.id -> action.semantic_search_id`
 - `external_data.id -> action.external_data_id`
 - `ai_agent.id -> action.ai_agent_id`
-- `action.id -> intent.action_id`
+- `action.id -> intent.action_id`; one Intent has one Action, and one Action can be reused by multiple Intents. If the API returns `intent_action_id_key`, the live DB still has an obsolete unique constraint on `intent.action_id` that must be removed backend-side.
 - `ai_agent.id -> ai_agent_utility.ai_agent_id`
 - `utility.id -> ai_agent_utility.utility_id`
 

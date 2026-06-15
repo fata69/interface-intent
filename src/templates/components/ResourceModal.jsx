@@ -56,7 +56,6 @@ export function ResourceModal({ modal, form, errors, visibleFields, data, busy =
               key={field.key}
               field={field}
               value={form[field.key] ?? ''}
-              form={form}
               data={data}
               error={fieldError(field)}
               autoFocus={index === 0}

@@ -26,7 +26,7 @@ export function IntentsPage({ data, apiStatus, loading, loadData, setApiStatus }
     };
   }, [data, selectedUsecaseId]);
 
-  const crud = useResourceCrud({ resource: 'intents', data: filteredData, validationRows: data.intents || [], loadData, setApiStatus });
+  const crud = useResourceCrud({ resource: 'intents', data: filteredData, loadData, setApiStatus });
   const statusText = syncState.busy ? 'Menyinkronkan intent cache ke AIWO engine...' : syncState.message || apiStatus;
   const statusWarning = statusText.includes('gagal') || statusText.includes('belum');
 

@@ -146,6 +146,8 @@ Payload create/update:
 
 `usecase_id` dan `action_id` memakai dropdown dari data real API.
 
+Relationship rule: one Intent stores exactly one `action_id`, but one Action may be reused by multiple Intents. The frontend therefore keeps all Actions selectable in the Intent form, including Actions already referenced by other Intents. If the API returns `intent_action_id_key`, the live database still has an obsolete unique constraint on `intent.action_id`; drop that constraint so `action_id` remains a normal foreign key.
+
 ### Usecases
 
 | Method | Path | Fungsi |

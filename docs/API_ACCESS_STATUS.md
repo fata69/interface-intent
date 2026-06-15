@@ -78,6 +78,8 @@ Endpoint berikut muncul di Swagger JSON aktif dan sudah dipetakan ke frontend bi
 
 Runtime slash behavior has previously differed from Swagger for `roles`, `usecases`, `users`, `utilities`, and `vector-collections`. Keep `src/api/client.js` on the known working paths unless a new live probe proves a change is safe.
 
+Intent/Action relationship rule: one Intent has one `action_id`, and one Action may be referenced by multiple Intents. The frontend follows that rule by showing all Actions in the Intent form. If creating another Intent with an already-used Action returns `intent_action_id_key`, the live database still has an obsolete unique constraint on `intent.action_id`; remove that DB constraint before retesting reusable Actions.
+
 ## Non-Swagger Endpoints Used by UI
 
 | Method | Frontend path | Target | UI status |

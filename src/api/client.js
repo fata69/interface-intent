@@ -38,16 +38,17 @@ async function responseError(response) {
   const fallback = response.statusText || 'Request gagal';
   const text = await response.text().catch(() => fallback);
   if (!text) return fallback;
+  const reusableActionConstraintMessage = 'Database masih membatasi satu Action untuk satu Intent. Hapus constraint intent_action_id_key agar satu Action bisa dipakai beberapa Intent.';
 
-  if (text.includes('intent_action_id_key') || text.includes('duplicate key value')) {
-    return 'Action ini sudah dipakai oleh Intent lain. Pilih Action lain atau edit Intent yang sudah ada.';
+  if (text.includes('intent_action_id_key')) {
+    return reusableActionConstraintMessage;
   }
 
   try {
     const payload = JSON.parse(text);
     const message = payload.error || payload.message || fallback;
-    if (message.includes('intent_action_id_key') || message.includes('duplicate key value')) {
-      return 'Action ini sudah dipakai oleh Intent lain. Pilih Action lain atau edit Intent yang sudah ada.';
+    if (message.includes('intent_action_id_key')) {
+      return reusableActionConstraintMessage;
     }
     return message;
   } catch {
