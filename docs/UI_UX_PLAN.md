@@ -7,7 +7,7 @@ The dashboard is an operational React/Vite interface for configuring AI chatbot 
 Active sources:
 
 - ERD: `ERD.mmd` and `ERD_VIEW.html` in the repository root.
-- Swagger: `http://194.233.79.180:8080/swagger/index.html#/`.
+- Swagger: `http://172.16.210.244:8080/swagger/index.html#/`.
 - Internal app server: `litmas@172.16.210.244`.
 
 The UI uses a focused management-console structure:
@@ -162,3 +162,4 @@ Current implementation should satisfy:
 - Vector Collections sends real API/webhook requests for original file upload and vector indexing.
 - `App.jsx` remains a small shell; feature logic stays in feature folders.
 - No mock data is used anywhere in the app.
+

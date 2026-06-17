@@ -19,7 +19,7 @@ This repository contains a React/Vite dashboard for configuring an AI chatbot sy
 - Keep future Markdown documentation in `docs/`; leave only `AGENTS.md` at the repository root.
 - `docs/API_REFERENCE.md` documents payloads and Swagger-derived endpoint notes.
 - `docs/API_ACCESS_STATUS.md` documents which endpoints were reachable and which ERD resources are not exposed by Swagger.
-- `docs/NEW_ERD_SWAGGER_AUDIT_20260604.md` documents the new ERD and Swagger audit for `http://194.233.79.180:8080`.
+- `docs/NEW_ERD_SWAGGER_AUDIT_20260604.md` documents the new ERD and Swagger audit for `http://172.16.210.244:8080`.
 
 There is intentionally no mock data. Empty states mean the API returned no data, failed, or the endpoint is unavailable.
 
@@ -27,9 +27,9 @@ There is intentionally no mock data. Empty states mean the API returned no data,
 
 Latest ERD and Swagger audit date: 2026-06-08. The current ERD source is `ERD.mmd` in the repository root, with `ERD_VIEW.html` as the browser-viewable renderer.
 
-Active Swagger/API target is `http://194.233.79.180:8080`. The internal app server runs as `litmas@172.16.210.244`, usually serving the app at `http://172.16.210.244:5173/`.
+Active Swagger/API target is `http://172.16.210.244:8080`. The internal app server runs as `litmas@172.16.210.244`, usually serving the app at `http://172.16.210.244:5173/`.
 
-The active API is reachable, and GET requests to the main data endpoints return `401 Unauthorized` without a Bearer token. Auth foundation and `/api` proxy defaults are already implemented for `http://194.233.79.180:8080`.
+The active API is reachable, and GET requests to the main data endpoints return `401 Unauthorized` without a Bearer token. Auth foundation and `/api` proxy defaults are already implemented for `http://172.16.210.244:8080`.
 
 New Swagger adds auth, roles, usecases, and user-management endpoints: `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me`, `GET /api/roles`, `POST /api/roles`, `GET/POST /api/usecases`, `GET/PUT/DELETE /api/usecases/{id}`, `GET/POST /api/users`, `GET/PUT/DELETE /api/users/{id}`, and `PUT /api/users/{id}/role`.
 
@@ -82,7 +82,7 @@ AI Chat remains separate from Swagger CRUD. It sends messages to the AIWO engine
 - `npm start` serves the production `dist` build through `server-setup/prod-server.mjs` and proxies `/api`, `/chat-webhook`, and `/vector-webhook`.
 - `npm test` currently runs `vite build` as a lightweight validation step.
 
-Share the WiFi URL shown by Vite, for example `http://192.168.77.163:5173/`; do not share `localhost` or `127.0.0.1`.
+Share the internal app URL shown by Vite, for example `http://172.16.210.244:5173/`; do not share `localhost` or `127.0.0.1`.
 
 ## Implemented Product Scope
 
@@ -107,9 +107,9 @@ ERD note: `semantic_search.collection_name` and `n8n_vector_collections.name` ar
 
 ## API Usage Status
 
-Active Swagger/current code default was checked at `http://194.233.79.180:8080/swagger/doc.json`. Do not use the internal app server host as the API target; `172.16.210.244` is for serving the frontend app.
+Active Swagger/current code default was checked at `http://172.16.210.244:8080/swagger/doc.json`. Do not use the internal app server host as the API target; `172.16.210.244` is for serving the frontend app.
 
-Active Swagger was checked on 2026-06-08 at `http://194.233.79.180:8080/swagger/doc.json`. The API is authenticated; unauthenticated GET requests to data endpoints return `401 Unauthorized`, and the frontend already handles login/Bearer token requests.
+Active Swagger was checked on 2026-06-08 at `http://172.16.210.244:8080/swagger/doc.json`. The API is authenticated; unauthenticated GET requests to data endpoints return `401 Unauthorized`, and the frontend already handles login/Bearer token requests.
 
 Fully utilized Swagger endpoints:
 
@@ -126,7 +126,7 @@ Fully utilized Swagger endpoints:
 
 Additional non-Swagger endpoint used by the UI:
 
-- `/chat-webhook`: `POST`, proxied to AIWO engine `http://194.233.79.180:8081/api/v1/chat`.
+- `/chat-webhook`: `POST`, proxied to AIWO engine `http://172.16.210.244:8081/api/v1/chat`.
 - `/vector-webhook`: `POST` and `PUT`, proxied to the local Go Vector Knowledge backend `http://127.0.0.1:8082/webhook/update-intent`. UI exposes only `POST` text JSON and PDF multipart upload; `PUT` sync remains backend-compatible but is hidden from UI because it can duplicate Intent/Action vectors. Do not run write smoke tests without a cleanup path because POST inserts rows into PGVector.
 
 Endpoints not present in Swagger / not available:
@@ -136,7 +136,7 @@ Endpoints not present in Swagger / not available:
 - Any CRUD endpoints for `n8n_vector_collections`.
 - Any CRUD endpoints for `n8n_vectors`.
 
-Migration caveat: the new Swagger at `194.233.79.180:8080` exposes `/api/vector-collections` for read/list/inspect, native collection creation, original file upload, and file view/download. Text/PDF knowledge upload also posts to Go backend `/vector-webhook` for vector indexing.
+Migration caveat: the new Swagger at `172.16.210.244:8080` exposes `/api/vector-collections` for read/list/inspect, native collection creation, original file upload, and file view/download. Text/PDF knowledge upload also posts to Go backend `/vector-webhook` for vector indexing.
 
 Do not add fake client-side data for unavailable endpoints. Disable unsupported actions and show a clear unavailable state.
 
@@ -207,3 +207,4 @@ For API-related changes, verify Swagger live again and update `docs/API_ACCESS_S
 Keep `.env` out of git. During local development, leave `VITE_API_BASE_URL` empty so the app uses the Vite proxy. If deploying without Vite proxy, set `VITE_API_BASE_URL` to the real API base URL and handle CORS on the server.
 
 For internal production, prefer `npm run build` plus `npm start` or the Nginx config in `server-setup/`. Keep `VITE_API_BASE_URL=` empty in production when using the provided proxy server so browser requests stay relative to the app host.
+

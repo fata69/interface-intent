@@ -4,20 +4,20 @@ Tanggal pengecekan: 2026-06-08
 
 Sumber aktif:
 
-- Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
-- Swagger JSON: `http://194.233.79.180:8080/swagger/doc.json`
+- Swagger UI: `http://172.16.210.244:8080/swagger/index.html#/`
+- Swagger JSON: `http://172.16.210.244:8080/swagger/doc.json`
 - Internal app server: `litmas@172.16.210.244`, default app URL `http://172.16.210.244:5173/`
 
-`GET http://194.233.79.180:8080/swagger/doc.json` berhasil mengembalikan `200` pada audit ini. API data menggunakan Bearer token. Request tanpa token ke endpoint data utama akan dianggap unauthorized.
+`GET http://172.16.210.244:8080/swagger/doc.json` berhasil mengembalikan `200` pada audit ini. API data menggunakan Bearer token. Request tanpa token ke endpoint data utama akan dianggap unauthorized.
 
 ## Runtime Target
 
 Frontend memakai relative path dan proxy, bukan direct browser call ke backend:
 
 ```text
-/api/*          -> http://194.233.79.180:8080/api/*
-/chat-webhook   -> http://194.233.79.180:8081/api/v1/chat
-/intent-sync    -> http://194.233.79.180:8081/api/v1/update
+/api/*          -> http://172.16.210.244:8080/api/*
+/chat-webhook   -> http://172.16.210.244:8081/api/v1/chat
+/intent-sync    -> http://172.16.210.244:8081/api/v1/update
 /vector-webhook -> http://127.0.0.1:8082/webhook/update-intent
 ```
 
@@ -108,3 +108,4 @@ Vector collection read/list/file upload/download/delete is available through `/a
 - All authenticated `/api/*` requests send `Authorization: Bearer <token>` after login.
 - A `401` response triggers unauthorized session handling and returns the user to login.
 - Some detail endpoints can return `404` for rows present in list responses; view/edit flows should fall back to the list row instead of blocking the user.
+

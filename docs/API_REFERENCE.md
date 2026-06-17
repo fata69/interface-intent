@@ -1,11 +1,11 @@
 ﻿# API Reference - Intent & Agent Management Console
 
-Sumber aktif: Swagger `http://194.233.79.180:8080/swagger/index.html#/` dan `http://194.233.79.180:8080/swagger/doc.json`.
+Sumber aktif: Swagger `http://172.16.210.244:8080/swagger/index.html#/` dan `http://172.16.210.244:8080/swagger/doc.json`.
 
 Base API:
 
 ```text
-http://194.233.79.180:8080
+http://172.16.210.244:8080
 ```
 
 Frontend sebaiknya tetap memakai relative path melalui Vite/prod proxy:
@@ -311,7 +311,7 @@ POST /chat-webhook
 Proxy target:
 
 ```text
-http://194.233.79.180:8081/api/v1/chat
+http://172.16.210.244:8081/api/v1/chat
 ```
 
 Payload:
@@ -335,7 +335,7 @@ POST /intent-sync
 Proxy target:
 
 ```text
-http://194.233.79.180:8081/api/v1/update
+http://172.16.210.244:8081/api/v1/update
 ```
 
 Payload:
@@ -382,3 +382,4 @@ Swagger defines these JSON-like fields as strings:
 - `cmetadata`
 
 Frontend validates JSON text with `JSON.parse`, then sends the string value to match Swagger.
+

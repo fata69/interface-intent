@@ -5,7 +5,7 @@ Dokumen ini menjelaskan cara mengembangkan Intent & Agent Management Console. Pr
 ## Sumber Utama
 
 - ERD terbaru ada di root repo: `ERD.mmd` dan `ERD_VIEW.html`.
-- Swagger aktif: `http://194.233.79.180:8080/swagger/index.html#/`.
+- Swagger aktif: `http://172.16.210.244:8080/swagger/index.html#/`.
 - Internal app server: `litmas@172.16.210.244`.
 - Default app URL server: `http://172.16.210.244:5173/`.
 
@@ -77,12 +77,12 @@ Roles dan Users bersifat admin-only di UI. Jangan menambah level submenu baru di
 
 ## Integrasi API
 
-Request API memakai relative path `/api/...` dan diproxy oleh Vite/prod server ke `http://194.233.79.180:8080`.
+Request API memakai relative path `/api/...` dan diproxy oleh Vite/prod server ke `http://172.16.210.244:8080`.
 
 ```text
-/api/*          -> http://194.233.79.180:8080/api/*
-/chat-webhook   -> http://194.233.79.180:8081/api/v1/chat
-/intent-sync    -> http://194.233.79.180:8081/api/v1/update
+/api/*          -> http://172.16.210.244:8080/api/*
+/chat-webhook   -> http://172.16.210.244:8081/api/v1/chat
+/intent-sync    -> http://172.16.210.244:8081/api/v1/update
 /vector-webhook -> http://127.0.0.1:8082/webhook/update-intent
 ```
 
@@ -151,3 +151,4 @@ npm run build
 ```
 
 Untuk perubahan API, cek ulang Swagger dan update `docs/API_ACCESS_STATUS.md`. Untuk perubahan struktur atau UI, update `AGENTS.md`, `README.md`, dan `docs/UI_UX_PLAN.md` bila relevan.
+

@@ -11,9 +11,9 @@ Aplikasi tetap frontend React. `server-setup/prod-server.mjs` hanya serve static
 ## Runtime Target
 
 - App URL: `http://172.16.210.244:5173/`
-- Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
-- API target: `http://194.233.79.180:8080`
-- AIWO engine target: `http://194.233.79.180:8081`
+- Swagger UI: `http://172.16.210.244:8080/swagger/index.html#/`
+- API target: `http://172.16.210.244:8080`
+- AIWO engine target: `http://172.16.210.244:8081`
 - Vector Knowledge backend target: `http://127.0.0.1:8082`
 - PM2 process name: `interface-intent`
 - Server project folder: `~/interface-intent/interface-intent-migrate`
@@ -269,8 +269,8 @@ Pastikan app berjalan setelah shell sudah `nvm use`. Jika masih ada indikasi mem
 VITE_API_BASE_URL=
 HOST=0.0.0.0
 PORT=5173
-API_TARGET=http://194.233.79.180:8080
-AIWO_ENGINE_TARGET=http://194.233.79.180:8081
+API_TARGET=http://172.16.210.244:8080
+AIWO_ENGINE_TARGET=http://172.16.210.244:8081
 VECTOR_BACKEND_TARGET=http://127.0.0.1:8082
 CHAT_WEBHOOK_PATH=/api/v1/chat
 INTENT_SYNC_PATH=/api/v1/update
@@ -324,3 +324,4 @@ Jangan smoke test `POST /vector-webhook` kecuali ada rencana cleanup, karena req
 ## Alternatif Nginx
 
 Jika server memakai Nginx, gunakan `nginx-interface-intent.conf` sebagai contoh static server dan reverse proxy. Dalam mode ini, Nginx menggantikan `prod-server.mjs` untuk serve app dan proxy request.
+

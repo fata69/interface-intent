@@ -6,9 +6,9 @@ React/Vite dashboard for configuring AI chatbot resources from the active ERD an
 
 - Internal app server: `litmas@172.16.210.244`
 - Default app URL: `http://172.16.210.244:5173/`
-- Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
-- REST API backend: `http://194.233.79.180:8080`
-- AIWO engine/chat/cache: `http://194.233.79.180:8081`
+- Swagger UI: `http://172.16.210.244:8080/swagger/index.html#/`
+- REST API backend: `http://172.16.210.244:8080`
+- AIWO engine/chat/cache: `http://172.16.210.244:8081`
 - Vector Knowledge backend: `http://127.0.0.1:8082`
 - ERD source: `ERD.mmd` and `ERD_VIEW.html` in the repository root
 
@@ -26,17 +26,17 @@ React/Vite dashboard for configuring AI chatbot resources from the active ERD an
 Browser
   -> React/Vite frontend
   -> /api/... via proxy
-  -> http://194.233.79.180:8080/api/...
+  -> http://172.16.210.244:8080/api/...
   -> Existing REST API
 
 Browser
   -> /chat-webhook via proxy
-  -> http://194.233.79.180:8081/api/v1/chat
+  -> http://172.16.210.244:8081/api/v1/chat
   -> AIWO chat service
 
 Browser
   -> /intent-sync via proxy
-  -> http://194.233.79.180:8081/api/v1/update
+  -> http://172.16.210.244:8081/api/v1/update
   -> AIWO intent cache reload
 
 Browser
@@ -131,9 +131,9 @@ Runtime defaults:
 
 ```text
 App URL:           http://172.16.210.244:5173/
-REST API proxy:    /api -> http://194.233.79.180:8080
-AIWO chat:         /chat-webhook -> http://194.233.79.180:8081/api/v1/chat
-Intent sync:       /intent-sync -> http://194.233.79.180:8081/api/v1/update
+REST API proxy:    /api -> http://172.16.210.244:8080
+AIWO chat:         /chat-webhook -> http://172.16.210.244:8081/api/v1/chat
+Intent sync:       /intent-sync -> http://172.16.210.244:8081/api/v1/update
 Vector webhook:    /vector-webhook -> http://127.0.0.1:8082/webhook/update-intent
 ```
 
@@ -184,7 +184,7 @@ Vector Collection file labels are parsed defensively from `cmetadata`. The front
 Latest Swagger source checked:
 
 ```text
-http://194.233.79.180:8080/swagger/doc.json
+http://172.16.210.244:8080/swagger/doc.json
 ```
 
 Covered by frontend:

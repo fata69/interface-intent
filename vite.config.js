@@ -6,21 +6,21 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://194.233.79.180:8080',
+        target: 'http://172.16.210.244:8080',
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.setHeader('Origin', 'http://194.233.79.180:8080');
+            proxyReq.setHeader('Origin', 'http://172.16.210.244:8080');
           });
         },
       },
       '/chat-webhook': {
-        target: 'http://194.233.79.180:8081',
+        target: 'http://172.16.210.244:8081',
         changeOrigin: true,
         rewrite: () => '/api/v1/chat',
       },
       '/intent-sync': {
-        target: 'http://194.233.79.180:8081',
+        target: 'http://172.16.210.244:8081',
         changeOrigin: true,
         rewrite: () => '/api/v1/update',
       },

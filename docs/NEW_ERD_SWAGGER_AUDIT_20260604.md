@@ -8,12 +8,12 @@ Audit ini membandingkan codebase React/Vite saat ini dengan ERD root repo dan Sw
 
 - ERD source: `ERD.mmd`
 - ERD viewer: `ERD_VIEW.html`
-- Swagger UI: `http://194.233.79.180:8080/swagger/index.html#/`
-- Swagger JSON: `http://194.233.79.180:8080/swagger/doc.json`
+- Swagger UI: `http://172.16.210.244:8080/swagger/index.html#/`
+- Swagger JSON: `http://172.16.210.244:8080/swagger/doc.json`
 - Internal app server: `litmas@172.16.210.244`
 - Default app URL on internal server: `http://172.16.210.244:5173/`
 
-`GET http://194.233.79.180:8080/swagger/doc.json` returned `200` during this audit.
+`GET http://172.16.210.244:8080/swagger/doc.json` returned `200` during this audit.
 
 ## ERD Tables
 
@@ -120,3 +120,4 @@ Current codebase matches the ERD/Swagger direction:
 - Agent Utilities remains create-only because Swagger does not expose list/update/delete.
 - `n8n_vectors` remains backend/PGVector-managed and is not directly inspectable as a table from the web UI.
 - Write-path testing needs manual approval and cleanup planning because API and PGVector data are real.
+
