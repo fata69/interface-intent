@@ -2,7 +2,7 @@
 
 Scope: current `migrate-swagger` worktree for the React/Vite Intent & Agent Management Console.
 
-This audit looks for holes, unused code/imports, and optimization opportunities. It is written with the current project constraints in mind: the frontend must follow the Swagger API provided by the mentor, auth uses Bearer token, user creation belongs in the admin Users menu, and Vector Collections intentionally uses both Swagger and n8n.
+This audit looks for holes, unused code/imports, and optimization opportunities. It is written with the current project constraints in mind: the frontend must follow the Swagger API provided by the mentor, auth uses Bearer token, user creation belongs in the admin Users menu, and Vector Collections intentionally uses both Swagger native file storage and the Go Vector Knowledge backend.
 
 ## Verification Performed
 
@@ -22,7 +22,7 @@ Applied after the initial audit:
 - Made Action relation rendering defensive when `data.actions` is unavailable.
 - Removed technical API endpoint/raw payload display from the detail drawer and replaced it with user-facing status/detail labels.
 - Cleaned up several customer-facing UI status messages so endpoint/API wording stays in docs, not the app surface.
-- Revised audit wording so Swagger+n8n Vector flow, Bearer token auth, and User role assignment match the current mentor-provided backend constraints.
+- Revised audit wording so Swagger plus Go Vector Knowledge flow, Bearer token auth, and User role assignment match the current mentor-provided backend constraints.
 
 ## Phase 2 Applied
 
@@ -87,14 +87,14 @@ The two-endpoint flow is kept. If user data saves but role assignment fails, the
 Evidence:
 
 - `src/features/vector-collections/components/VectorCollectionPanel.jsx` uploads the original TXT/PDF to Swagger native Vector Collections.
-- The same flow then posts to `/vector-webhook` so n8n can chunk/index into PGVector.
+- The same flow then posts to `/vector-webhook` so the Go Vector Knowledge backend can chunk/index into PGVector.
 
 Context:
 
 The two-API flow is intentional and correct:
 
 - Swagger Vector Collections stores the original readable file so the web can list/view it and preserve file identity.
-- n8n `/vector-webhook` chunks/indexes the content into vector rows for AI retrieval.
+- Go Vector Knowledge `/vector-webhook` chunks/indexes the content into vector rows for AI retrieval.
 
 Risk:
 
@@ -184,7 +184,7 @@ Evidence:
 
 Risk:
 
-The app now has auth, admin-only flows, multi-step user edits, Vector Collections two-step upload, and n8n chat integration. `vite build` proves bundling but does not prove form behavior, role visibility, webhook error handling, or unused code cleanup.
+The app now has auth, admin-only flows, multi-step user edits, Vector Collections two-step upload, and AIWO chat integration. `vite build` proves bundling but does not prove form behavior, role visibility, webhook error handling, or unused code cleanup.
 
 Recommendation:
 
