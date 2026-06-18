@@ -1,9 +1,13 @@
 node_modules/
 dist/
+.opencode/
+upload/
 .env
 .env.*
 !.env.example
 !.env.production.example
+*.postman_collection.json
+/n8n/auto-skor-with-validator-ocr-openrouter.json
 *.log
 .DS_Store
 Thumbs.db
