@@ -223,12 +223,24 @@ table { width: 100%; border-collapse: collapse; min-width: 860px; }
 .resource-actions .col-action_type, .resource-actions .cell-action_type { width: 210px; }
 .resource-actions .col-parameter_needed, .resource-actions .cell-parameter_needed { width: 280px; }
 .resource-actions .actions-col, .resource-actions .row-actions { width: 166px; }
-.resource-intents { min-width: 980px; table-layout: fixed; }
-.resource-intents .col-id, .resource-intents .cell-id { width: 88px; }
-.resource-intents .col-context, .resource-intents .cell-context { width: 450px; }
-.resource-intents .col-action_summary, .resource-intents .cell-action_summary { width: auto; }
+.resource-intents { min-width: 1100px; table-layout: fixed; }
+.resource-intents .col-id, .resource-intents .cell-id { width: 72px; }
+.resource-intents .col-usecase_id, .resource-intents .cell-usecase_id { width: 210px; }
+.resource-intents .col-context, .resource-intents .cell-context { width: 36%; }
+.resource-intents .col-action_summary, .resource-intents .cell-action_summary { width: 34%; }
 .resource-intents .actions-col, .resource-intents .row-actions { width: 166px; }
 .action-summary-cell { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px; min-width: 0; }
+.resource-intents .action-summary-cell { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+.resource-intents .action-summary-cell .target-type { max-width: 100%; }
+.resource-intents .action-summary-cell .target-content strong,
+.resource-intents .action-summary-cell .target-content small {
+  overflow: hidden;
+  display: -webkit-box;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+}
+.resource-intents .action-summary-cell .target-content strong { -webkit-line-clamp: 2; }
+.resource-intents .action-summary-cell .target-content small { -webkit-line-clamp: 2; }
 .cell-context, .cell-action_summary { white-space: normal; }
 .resource-externalData { min-width: 960px; table-layout: fixed; }
 .resource-externalData .col-protocol_request, .resource-externalData .cell-protocol_request { width: 260px; }
